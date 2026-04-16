@@ -305,25 +305,22 @@ svg.chart{width:100%;display:block;overflow:visible;}
 
       <div class="card">
         <div class="card-head">
-          <div class="card-title">TWR-analyse — per innskuddsperiode</div>
+          <div class="card-title">Avkastning per innskudd — frem til i dag</div>
         </div>
         <div class="card-body">
           <div class="table-scroll">
             <table class="data-table">
               <thead><tr>
-                <th>Periode</th>
+                <th>Dato</th>
                 <th>Investering</th>
-                <th>NAV start</th>
-                <th>NAV slutt</th>
-                <th>Delperiode avk.</th>
-                <th>Kumulativ TWR</th>
-                <th>OSEFX samme periode</th>
+                <th>NAV kjøpt</th>
+                <th>NAV i dag</th>
+                <th>Total avk.</th>
+                <th>Annualisert</th>
+                <th>OSEFX ann.</th>
               </tr></thead>
               <tbody id="twr-tbody"></tbody>
             </table>
-          </div>
-          <div class="twr-explain">
-            <strong>TWR-metoden:</strong> Deler investeringsperioden i delperioder mellom hvert innskudd. Avkastningen i hver delperiode = (NAV_slutt / NAV_start) − 1. Kumulativ TWR = produkt av alle (1 + delperiode). <strong>Fordel:</strong> Eliminerer effekten av timingen av dine innskudd — viser fondets faktiske prestasjoner uavhengig av når du investerte. <br><strong>MWR skiller seg fra TWR</strong> ved at den store innskuddet i mars 2026 (kr 1,2M) påvirker IRR vesentlig ettersom det kom rett etter et NAV-løft.
           </div>
         </div>
       </div>
@@ -1001,28 +998,54 @@ function renderTransactions(nav){
 }
 
 // ═══════════════════════════════════════
-// TWR TABLE
+// TWR TABLE — per investment to today
 // ═══════════════════════════════════════
 function renderTWRTable(nav){
-  let cumTwr=1;
-  const rows=PAN_TX.map((tx,i)=>{
-    const navEnd=i<PAN_TX.length-1?PAN_TX[i+1].nav:nav;
-    const subRet=navEnd/tx.nav-1;
-    cumTwr*=(1+subRet);
-    const endDate=i<PAN_TX.length-1?PAN_TX[i+1].date:new Date().toISOString().slice(0,10);
-    const o0=osefxOnDate(tx.date);
-    const o1=osefxOnDate(endDate);
-    const osefxSub=o0&&o1?o1/o0-1:null;
+  const today = new Date().toISOString().slice(0,10);
+  const oNow = NAV_SERIES.length ? NAV_SERIES[NAV_SERIES.length-1].o : null;
+
+  // Calculate annualized return for each transaction
+  const results = PAN_TX.map(tx => {
+    const totalRet = nav / tx.nav - 1;
+    const years = (new Date() - new Date(tx.date)) / (365.25*24*3600*1000);
+    const annRet = years > 0 ? Math.pow(1 + totalRet, 1/years) - 1 : totalRet;
+
+    // OSEFX over same period
+    const o0 = osefxOnDate(tx.date);
+    const osefxAnn = o0 && oNow && years > 0 ? Math.pow(oNow/o0, 1/years) - 1 : null;
+
+    return { tx, totalRet, annRet, osefxAnn, years };
+  });
+
+  // Find max annualized for bar scaling
+  const maxAnn = Math.max(...results.map(r => Math.abs(r.annRet)));
+
+  const rows = results.map(r => {
+    const barPct = maxAnn > 0 ? Math.abs(r.annRet) / maxAnn * 100 : 0;
+    const barColor = r.annRet >= 0 ? 'var(--green)' : 'var(--red)';
+    const yearsLabel = r.years >= 1 ? r.years.toFixed(1) + ' år' : Math.round(r.years*12) + ' mnd';
+
     return `<tr>
-      <td style="color:var(--text3);font-size:12px">${new Date(tx.date).toLocaleDateString('nb-NO')} → ${i<PAN_TX.length-1?new Date(PAN_TX[i+1].date).toLocaleDateString('nb-NO'):'i dag'}</td>
-      <td>${fmtKr(tx.amount)}</td>
-      <td>${fmt(tx.nav,2)}</td>
-      <td>${fmt(navEnd,2)}</td>
-      <td class="${pc(subRet)}">${fmtPct(subRet)}</td>
-      <td class="${pc(cumTwr-1)}">${fmtPct(cumTwr-1)}</td>
-      <td class="${osefxSub!==null?pc(osefxSub):''}">${osefxSub!==null?fmtPct(osefxSub):'—'}</td>
+      <td>
+        <div style="font-weight:500;color:var(--text)">${new Date(r.tx.date).toLocaleDateString('nb-NO')}</div>
+        <div style="font-size:11px;color:var(--text3)">${yearsLabel} siden</div>
+      </td>
+      <td>${fmtKr(r.tx.amount)}</td>
+      <td style="color:var(--text3)">${fmt(r.tx.nav,0)}</td>
+      <td style="color:var(--text3)">${fmt(nav,0)}</td>
+      <td class="${pc(r.totalRet)}">${fmtPct(r.totalRet)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:80px;height:14px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0">
+            <div style="width:${barPct.toFixed(0)}%;height:100%;background:${barColor};border-radius:3px;opacity:0.8"></div>
+          </div>
+          <span class="${pc(r.annRet)}" style="font-weight:500;min-width:52px">${fmtPct(r.annRet)}</span>
+        </div>
+      </td>
+      <td class="${r.osefxAnn!==null?pc(r.osefxAnn):''}" style="color:var(--text3)">${r.osefxAnn!==null?fmtPct(r.osefxAnn):'—'}</td>
     </tr>`;
   });
+
   document.getElementById('twr-tbody').innerHTML=rows.join('');
 }
 
