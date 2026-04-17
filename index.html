@@ -669,12 +669,7 @@ function toggleTema(){
   const btn = document.getElementById('toggle-tema-btn');
   const icon = document.getElementById('toggle-tema-icon');
 
-  // Show/hide tema rows
-  document.querySelectorAll('.tema-row').forEach(el=>{
-    el.classList.toggle('tema-hidden', !temaVisible);
-  });
-
-  // Update button
+  // Update button appearance
   if(temaVisible){
     btn.classList.remove('active');
     icon.textContent = '👁';
@@ -685,8 +680,15 @@ function toggleTema(){
     btn.childNodes[1].textContent = ' Vis andre posisjoner';
   }
 
-  // Re-render all values that depend on temaVisible
+  // Re-render all values (renderAll uses temaVisible internally)
   renderAll();
+
+  // Re-apply hidden class to any remaining tema-row elements
+  if(!temaVisible){
+    document.querySelectorAll('.tema-row').forEach(el=>{
+      el.classList.add('tema-hidden');
+    });
+  }
 }
 
 // ═══════════════════════════════════════
@@ -933,13 +935,13 @@ function renderPeriodTable(nav){
 // QUICK HOLDINGS
 // ═══════════════════════════════════════
 function renderQuickHoldings(panMV,temaMV){
-  const total=panMV+temaMV;
+  const total = temaVisible ? panMV+temaMV : panMV;
   const rows=[
-    {name:'Pareto Aksje Norge A',mv:panMV,pct:total?panMV/total:0,type:'Aksjefond'},
-    {name:'Tema Eiendom AS',mv:temaMV,pct:total?temaMV/total:0,type:'Unotert',tema:true},
+    {name:'Pareto Aksje Norge A',mv:panMV,pct:total?panMV/total:1,type:'Aksjefond',tema:false},
+    ...(temaVisible ? [{name:'Tema Eiendom AS',mv:temaMV,pct:total?temaMV/total:0,type:'Unotert',tema:true}] : []),
   ];
   document.getElementById('quick-holdings').innerHTML=rows.map(r=>`
-    <tr class="${r.tema?'tema-row':''}">
+    <tr>
       <td><div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--text)">${r.name}</div>
           <div style="font-size:11px;color:var(--text3)">${r.type}</div></td>
       <td>${fmtKr(r.mv)}</td>
@@ -970,7 +972,7 @@ function renderHoldings(nav){
       <td class="${pc(gain)}">${(gain>=0?'+':'')+fmtKr(gain)}</td>
       <td class="${pc(gain/cost)}">${fmtPct(gain/cost)}</td>
     </tr>
-    <tr class="tema-row">
+    ${temaVisible ? `<tr class="tema-row">
       <td><div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--text)">Tema Eiendom AS</div>
           <div style="font-size:11px;color:var(--text3)">Unotert · Eiendom · siste omsetning ${temaLastDate}</div></td>
       <td>33 500</td>
@@ -979,7 +981,7 @@ function renderHoldings(nav){
       <td style="color:var(--text3)">Ikke oppgitt</td>
       <td style="color:var(--text3)">—</td>
       <td style="color:var(--text3)">—</td>
-    </tr>
+    </tr>` : ''}
     <tr class="bold-row">
       <td colspan="3">TOTAL PORTEFØLJE</td>
       <td class="gold-val">${fmtKr(mv + (temaVisible ? 33500*temaNav : 0))}</td>
