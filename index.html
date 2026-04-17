@@ -151,6 +151,10 @@ svg.chart{width:100%;display:block;overflow:visible;}
 .tooltip-box{position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--text);pointer-events:none;z-index:100;white-space:nowrap;transform:translate(-50%,-110%);display:none;}
 .twr-explain{font-size:12px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:14px 18px;line-height:1.8;margin-top:16px;}
 .twr-explain strong{color:var(--text2);}
+.toggle-tema-btn{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text3);border-radius:5px;padding:7px 14px;font-size:13px;font-weight:400;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;}
+.toggle-tema-btn:hover{border-color:var(--text3);color:var(--text);}
+.toggle-tema-btn.active{background:rgba(42,125,82,0.1);border-color:rgba(42,125,82,0.3);color:var(--green);}
+.tema-hidden{display:none!important;}
 </style>
 </head>
 <body>
@@ -203,6 +207,9 @@ svg.chart{width:100%;display:block;overflow:visible;}
           <div class="sec-title">Porteføljeoversikt</div>
           <div class="sec-sub">EOA Capital AS · NAV per <span id="upd-date">—</span></div>
         </div>
+        <button class="toggle-tema-btn" id="toggle-tema-btn" onclick="toggleTema()">
+          <span id="toggle-tema-icon">👁</span> Skjul andre posisjoner
+        </button>
       </div>
       <div class="kpi-grid">
         <div class="kpi-card gold">
@@ -381,7 +388,7 @@ svg.chart{width:100%;display:block;overflow:visible;}
           </table>
         </div>
       </div>
-      <div class="card">
+      <div class="card tema-row">
         <div class="card-head">
           <div class="card-title">Tema Eiendom AS</div>
           <div style="font-size:12px;color:var(--text3)">Unotert · Siste kurs: <span id="tema-last-date">—</span></div>
@@ -654,6 +661,28 @@ let temaLastDate = '15.04.2026';
 let currentChartPeriod = 'all';
 
 // ═══════════════════════════════════════
+// TOGGLE TEMA
+// ═══════════════════════════════════════
+let temaVisible = true;
+function toggleTema(){
+  temaVisible = !temaVisible;
+  const btn = document.getElementById('toggle-tema-btn');
+  const icon = document.getElementById('toggle-tema-icon');
+  document.querySelectorAll('.tema-row').forEach(el=>{
+    el.classList.toggle('tema-hidden', !temaVisible);
+  });
+  if(temaVisible){
+    btn.classList.remove('active');
+    icon.textContent = '👁';
+    btn.childNodes[1].textContent = ' Skjul andre posisjoner';
+  } else {
+    btn.classList.add('active');
+    icon.textContent = '🙈';
+    btn.childNodes[1].textContent = ' Vis andre posisjoner';
+  }
+}
+
+// ═══════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════
 function doLogin(){
@@ -900,10 +929,10 @@ function renderQuickHoldings(panMV,temaMV){
   const total=panMV+temaMV;
   const rows=[
     {name:'Pareto Aksje Norge A',mv:panMV,pct:total?panMV/total:0,type:'Aksjefond'},
-    {name:'Tema Eiendom AS',mv:temaMV,pct:total?temaMV/total:0,type:'Unotert'},
+    {name:'Tema Eiendom AS',mv:temaMV,pct:total?temaMV/total:0,type:'Unotert',tema:true},
   ];
   document.getElementById('quick-holdings').innerHTML=rows.map(r=>`
-    <tr>
+    <tr class="${r.tema?'tema-row':''}">
       <td><div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:500;color:var(--text)">${r.name}</div>
           <div style="font-size:11px;color:var(--text3)">${r.type}</div></td>
       <td>${fmtKr(r.mv)}</td>
@@ -934,7 +963,7 @@ function renderHoldings(nav){
       <td class="${pc(gain)}">${(gain>=0?'+':'')+fmtKr(gain)}</td>
       <td class="${pc(gain/cost)}">${fmtPct(gain/cost)}</td>
     </tr>
-    <tr>
+    <tr class="tema-row">
       <td><div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--text)">Tema Eiendom AS</div>
           <div style="font-size:11px;color:var(--text3)">Unotert · Eiendom · siste omsetning ${temaLastDate}</div></td>
       <td>33 500</td>
