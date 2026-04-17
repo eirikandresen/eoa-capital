@@ -668,9 +668,13 @@ function toggleTema(){
   temaVisible = !temaVisible;
   const btn = document.getElementById('toggle-tema-btn');
   const icon = document.getElementById('toggle-tema-icon');
+
+  // Show/hide tema rows
   document.querySelectorAll('.tema-row').forEach(el=>{
     el.classList.toggle('tema-hidden', !temaVisible);
   });
+
+  // Update button
   if(temaVisible){
     btn.classList.remove('active');
     icon.textContent = '👁';
@@ -680,6 +684,9 @@ function toggleTema(){
     icon.textContent = '🙈';
     btn.childNodes[1].textContent = ' Vis andre posisjoner';
   }
+
+  // Re-render all values that depend on temaVisible
+  renderAll();
 }
 
 // ═══════════════════════════════════════
@@ -842,7 +849,7 @@ const bc=n=>n>=0?'pos':'neg';
 function renderAll(){
   const nav=panNavNow;
   const panMV=totalUnits()*nav;
-  const temaMV=33500*temaNav;
+  const temaMV=temaVisible ? 33500*temaNav : 0;
   const invested=totalInvested();
   const gain=panMV-invested;
   const twr=calcTWR(nav);
@@ -975,7 +982,7 @@ function renderHoldings(nav){
     </tr>
     <tr class="bold-row">
       <td colspan="3">TOTAL PORTEFØLJE</td>
-      <td class="gold-val">${fmtKr(mv+33500*temaNav)}</td>
+      <td class="gold-val">${fmtKr(mv + (temaVisible ? 33500*temaNav : 0))}</td>
       <td>${fmtKr(cost)}</td>
       <td class="${pc(gain)}">${(gain>=0?'+':'')+fmtKr(gain)} <span style="font-size:11px;color:var(--text3)">(PAN)</span></td>
       <td class="${pc(gain/cost)}">${fmtPct(gain/cost)} <span style="font-size:11px;color:var(--text3)">(PAN)</span></td>
