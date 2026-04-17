@@ -626,41 +626,15 @@ let currentChartPeriod = 'all';
 // ═══════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════
-async function doLogin(){
-  const pw = document.getElementById('pw-input').value;
-  const btn = document.querySelector('.login-btn');
-  btn.textContent = 'Logger inn…';
-  btn.disabled = true;
-
-  try {
-    const r = await fetch('/.netlify/functions/auth', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({password: pw})
-    });
-    const data = await r.json();
-
-    if (data.ok) {
-      // Store session token in sessionStorage (clears when tab closes)
-      sessionStorage.setItem('eoa_token', data.token);
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('portal').style.display='block';
-      init();
-    } else {
-      document.getElementById('login-err').style.display='block';
-      document.getElementById('pw-input').value='';
-    }
-  } catch(e) {
-    // Fallback for local file:// usage (no server)
-    const fallback = prompt('⚠️ Ingen server funnet. Kjøres lokalt?\nSkriv passordet for lokal tilgang:');
-    if (fallback && fallback.length > 4) {
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('portal').style.display='block';
-      init();
-    }
-  } finally {
-    btn.textContent = 'Logg inn';
-    btn.disabled = false;
+function doLogin(){
+  const pw = document.getElementById("pw-input").value;
+  if(pw === "eoacapitalas!"){
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("portal").style.display="block";
+    init();
+  } else {
+    document.getElementById("login-err").style.display="block";
+    document.getElementById("pw-input").value="";
   }
 }
 function doLogout(){
