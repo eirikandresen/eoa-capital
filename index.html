@@ -401,14 +401,44 @@ svg.chart{width:100%;display:block;overflow:visible;}
     <div id="page-regnskap" class="page">
       <div class="sec-header">
         <div><div class="sec-title">Regnskap</div>
-        <div class="sec-sub">EOA Capital AS — data fra proff.no / Brønnøysundregistrene</div></div>
+        <div class="sec-sub">EOA Capital AS — Brønnøysundregistrene via proff.no · Beløp i kr</div></div>
       </div>
-      <div class="year-tabs" id="year-tabs"></div>
-      <div class="regn-grid">
-        <div class="card"><div class="card-head"><div class="card-title">Resultatregnskap</div></div><div class="card-body" id="regn-result"></div></div>
-        <div class="card"><div class="card-head"><div class="card-title">Balanse</div></div><div class="card-body" id="regn-balanse"></div></div>
+
+      <!-- EK Graf -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head"><div class="card-title">Egenkapitalutvikling</div></div>
+        <div class="card-body">
+          <svg id="ek-chart" class="chart" viewBox="0 0 820 180" style="height:180px"></svg>
+          <div class="chart-legend" style="margin-top:12px">
+            <div class="leg-item"><div class="leg-line" style="background:var(--green)"></div> Sum egenkapital</div>
+            <div class="leg-item"><div class="leg-line" style="background:var(--gold);opacity:.6"></div> Årsresultat</div>
+          </div>
+        </div>
       </div>
-      <div class="regn-note">📋 <strong>Kilde:</strong> Brønnøysundregistrene via proff.no. Oppdater tallene ved å redigere <code>ACCOUNTING_DATA</code> i <code>index.html</code>, eller legg inn riktige tall fra din revisor.</div>
+
+      <!-- Resultatregnskap — alle år -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head"><div class="card-title">Resultatregnskap</div></div>
+        <div class="table-scroll">
+          <table class="data-table" id="regn-result-table">
+            <thead id="regn-thead-result"></thead>
+            <tbody id="regn-tbody-result"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Balanse — alle år -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head"><div class="card-title">Balanse</div></div>
+        <div class="table-scroll">
+          <table class="data-table" id="regn-balanse-table">
+            <thead id="regn-thead-balanse"></thead>
+            <tbody id="regn-tbody-balanse"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="regn-note">📋 <strong>Kilde:</strong> Brønnøysundregistrene via proff.no. Oppdater tallene ved å redigere <code>ACCOUNTING_DATA</code> i <code>index.html</code>.</div>
     </div>
 
   </div>
@@ -1190,24 +1220,114 @@ function drawMainChart(period,el){
 // REGNSKAP
 // ═══════════════════════════════════════
 function initRegnskap(){
-  const years=Object.keys(ACCOUNTING_DATA).map(Number).sort((a,b)=>b-a);
-  document.getElementById('year-tabs').innerHTML=years.map(y=>
-    `<button class="year-tab ${y===years[0]?'active':''}" onclick="renderRegnskap(${y})">${y}</button>`
-  ).join('');
-  renderRegnskap(years[0]);
+  const years = Object.keys(ACCOUNTING_DATA).map(Number).sort((a,b)=>a-b); // asc for table
+
+  // ── Build result table ──────────────────────────────
+  const resultKeys = ACCOUNTING_DATA[years[0]].result.map(r=>r);
+  document.getElementById('regn-thead-result').innerHTML =
+    `<tr><th>Post</th>${years.map(y=>`<th style="text-align:right">${y}</th>`).join('')}</tr>`;
+
+  document.getElementById('regn-tbody-result').innerHTML = resultKeys.map(item=>{
+    const vals = years.map(y=>{
+      const d = ACCOUNTING_DATA[y];
+      const row = d ? d.result.find(r=>r.key===item.key) : null;
+      const v = row ? row.val : null;
+      if(v===null) return '<td>—</td>';
+      const cls = item.hl ? 'gold-val' : v<0 ? 'neg-val' : v>0 ? 'pos-val' : '';
+      return `<td class="${cls}" style="text-align:right;${item.bold?'font-weight:600':''}">
+        ${v<0?'−':''}${fmtKr(Math.abs(v))}
+      </td>`;
+    }).join('');
+    return `<tr style="${item.bold?'background:rgba(255,255,255,0.02)':''}">
+      <td style="${item.bold?'font-weight:600;color:var(--text)':'color:var(--text2)'}">${item.key}</td>
+      ${vals}
+    </tr>`;
+  }).join('');
+
+  // ── Build balanse table ─────────────────────────────
+  const balanseKeys = ACCOUNTING_DATA[years[0]].balanse.map(r=>r);
+  document.getElementById('regn-thead-balanse').innerHTML =
+    `<tr><th>Post</th>${years.map(y=>`<th style="text-align:right">${y}</th>`).join('')}</tr>`;
+
+  document.getElementById('regn-tbody-balanse').innerHTML = balanseKeys.map(item=>{
+    const vals = years.map(y=>{
+      const d = ACCOUNTING_DATA[y];
+      const row = d ? d.balanse.find(r=>r.key===item.key) : null;
+      const v = row ? row.val : null;
+      if(v===null) return '<td>—</td>';
+      const cls = item.hl ? 'gold-val' : v<0 ? 'neg-val' : '';
+      return `<td class="${cls}" style="text-align:right;${item.bold?'font-weight:600':''}">
+        ${v<0?'−':''}${fmtKr(Math.abs(v))}
+      </td>`;
+    }).join('');
+    return `<tr style="${item.bold?'background:rgba(255,255,255,0.02)':''}">
+      <td style="${item.bold?'font-weight:600;color:var(--text)':'color:var(--text2)'}">${item.key}</td>
+      ${vals}
+    </tr>`;
+  }).join('');
+
+  // ── EK Chart ────────────────────────────────────────
+  drawEKChart(years);
 }
 
-function renderRegnskap(year){
-  document.querySelectorAll('.year-tab').forEach(t=>t.classList.toggle('active',t.textContent==year));
-  const d=ACCOUNTING_DATA[year];
-  if(!d) return;
-  const mkSection=items=>items.map(item=>`
-    <div class="regn-item" style="${item.bold?'border-top:1px solid var(--border2);padding-top:16px;margin-top:4px':''}">
-      <div class="regn-key" style="${item.bold?'font-weight:600;color:var(--text)':''}">${item.key}</div>
-      <div class="regn-val ${item.val<0?'neg-val':item.hl?'gold-val':''}" style="${item.bold?'font-size:15px':''}">${item.val<0?'−':''}${fmtKr(Math.abs(item.val))}</div>
-    </div>`).join('');
-  document.getElementById('regn-result').innerHTML=mkSection(d.result);
-  document.getElementById('regn-balanse').innerHTML=mkSection(d.balanse);
+function drawEKChart(years){
+  const W=820, H=140, PL=10, PR=10, PT=10, PB=30;
+  const cw=W-PL-PR, ch=H-PT-PB;
+
+  const ekVals = years.map(y=>{
+    const d = ACCOUNTING_DATA[y];
+    const row = d ? d.balanse.find(r=>r.key==='Sum egenkapital') : null;
+    return row ? row.val : 0;
+  });
+  const resVals = years.map(y=>{
+    const d = ACCOUNTING_DATA[y];
+    const row = d ? d.result.find(r=>r.key==='Årsresultat') : null;
+    return row ? row.val : 0;
+  });
+
+  const maxVal = Math.max(...ekVals) * 1.15;
+  const minVal = 0;
+
+  const sx = i => PL + i/(years.length-1) * cw;
+  const sy = v => H-PB-(v-minVal)/(maxVal-minVal)*ch;
+
+  const ekPath = ekVals.map((v,i)=>(i===0?'M':'L')+sx(i).toFixed(1)+','+sy(v).toFixed(1)).join(' ');
+  const areaPath = ekPath + ` L${sx(years.length-1).toFixed(1)},${H-PB} L${sx(0).toFixed(1)},${H-PB} Z`;
+
+  // Bar width for results
+  const barW = cw/years.length * 0.4;
+
+  const bars = resVals.map((v,i)=>{
+    const x = sx(i)-barW/2;
+    const barH = Math.abs(v)/(maxVal-minVal)*ch;
+    const y = v>=0 ? sy(v) : sy(0);
+    const color = v>=0 ? 'rgba(201,168,76,0.5)' : 'rgba(224,82,82,0.5)';
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="${color}" rx="2"/>`;
+  }).join('');
+
+  const dots = ekVals.map((v,i)=>
+    `<circle cx="${sx(i).toFixed(1)}" cy="${sy(v).toFixed(1)}" r="4" fill="var(--green)"/>
+     <text x="${sx(i).toFixed(1)}" y="${(sy(v)-10).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--green)" font-family="Outfit,sans-serif">${(v/1000).toFixed(0)}k</text>`
+  ).join('');
+
+  const xLabels = years.map((y,i)=>
+    `<text x="${sx(i).toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="11" fill="var(--text3)" font-family="Outfit,sans-serif">${y}</text>`
+  ).join('');
+
+  document.getElementById('ek-chart').innerHTML = `
+    <defs>
+      <linearGradient id="ekGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4caf7d" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="#4caf7d" stop-opacity="0.01"/>
+      </linearGradient>
+    </defs>
+    ${[0.25,0.5,0.75,1].map(f=>`<line x1="${PL}" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="${W-PR}" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('')}
+    ${bars}
+    <path d="${areaPath}" fill="url(#ekGrad)"/>
+    <path d="${ekPath}" fill="none" stroke="var(--green)" stroke-width="2.5"/>
+    ${dots}
+    ${xLabels}
+  `;
 }
 
 // ═══════════════════════════════════════
