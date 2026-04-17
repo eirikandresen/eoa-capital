@@ -239,7 +239,7 @@ svg.chart{width:100%;display:block;overflow:hidden;}
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" style="margin-bottom:20px">
         <div class="card-head">
           <div class="card-title">Verdiutvikling</div>
           <div class="period-tabs">
@@ -249,31 +249,36 @@ svg.chart{width:100%;display:block;overflow:hidden;}
             <button class="ptab" onclick="drawMainChart('ytd',this)">YTD</button>
           </div>
         </div>
-        <div class="card-body" style="padding:16px 0 16px 0">
-          <!-- Top chart: PAN A + OSEFX indexed % -->
-          <div style="font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding:0 24px">PAN A og OSEFX — indeksert avkastning</div>
-          <div style="position:relative">
-            <svg class="chart" id="main-chart-top" viewBox="0 0 820 180" style="height:180px;display:block"></svg>
-            <div id="tooltip-top" style="position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--text);pointer-events:none;z-index:100;white-space:nowrap;display:none;transform:translate(-50%,-110%)"></div>
-            <div id="crosshair-top" style="position:absolute;top:0;width:1px;background:rgba(255,255,255,0.15);pointer-events:none;display:none"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border)">
+
+          <!-- LEFT: PAN A + OSEFX % -->
+          <div style="border-right:1px solid var(--border);padding:16px 0 12px">
+            <div style="font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding:0 16px">PAN A og OSEFX — indeksert avkastning</div>
+            <div style="position:relative">
+              <svg id="main-chart-top" viewBox="0 0 500 160" style="width:100%;height:160px;display:block"></svg>
+              <div id="tooltip-top" style="position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--text);pointer-events:none;z-index:100;white-space:nowrap;display:none;transform:translate(-50%,-110%)"></div>
+              <div id="crosshair-top" style="position:absolute;top:0;width:1px;background:rgba(255,255,255,0.15);pointer-events:none;display:none"></div>
+            </div>
+            <div style="display:flex;gap:16px;padding:8px 16px 0;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)"><div style="width:16px;height:2px;background:var(--blue);border-radius:1px"></div>PAN A</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)"><div style="width:16px;height:2px;background:var(--gold);opacity:.8;border-radius:1px"></div>OSEFX</div>
+            </div>
           </div>
-          <div class="chart-legend" style="margin-bottom:16px;margin-top:8px;padding:0 24px">
-            <div class="leg-item"><div class="leg-line" style="background:var(--blue)"></div> PAN A (indeksert)</div>
-            <div class="leg-item"><div class="leg-line" style="background:var(--gold);opacity:.7"></div> OSEFX (indeksert)</div>
+
+          <!-- RIGHT: Portfolio MV kr -->
+          <div style="padding:16px 0 12px">
+            <div style="font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding:0 16px">Porteføljeverdi — kr</div>
+            <div style="position:relative">
+              <svg id="main-chart-bottom" viewBox="0 0 500 160" style="width:100%;height:160px;display:block"></svg>
+              <div id="tooltip-bottom" style="position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--text);pointer-events:none;z-index:100;white-space:nowrap;display:none;transform:translate(-50%,-110%)"></div>
+              <div id="crosshair-bottom" style="position:absolute;top:0;width:1px;background:rgba(255,255,255,0.15);pointer-events:none;display:none"></div>
+            </div>
+            <div style="display:flex;gap:16px;padding:8px 16px 0;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)"><div style="width:16px;height:2px;background:var(--green);border-radius:1px"></div>Markedsverdi</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3)"><div style="width:16px;border-top:2px dashed rgba(255,255,255,0.3)"></div>Investert</div>
+            </div>
           </div>
-          <!-- Divider -->
-          <div style="border-top:1px solid var(--border);margin:0 0 16px"></div>
-          <!-- Bottom chart: portfolio MV in kr -->
-          <div style="font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding:0 24px">Porteføljeverdi — kr</div>
-          <div style="position:relative">
-            <svg class="chart" id="main-chart-bottom" viewBox="0 0 820 160" style="height:160px;display:block"></svg>
-            <div id="tooltip-bottom" style="position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--text);pointer-events:none;z-index:100;white-space:nowrap;display:none;transform:translate(-50%,-110%)"></div>
-            <div id="crosshair-bottom" style="position:absolute;top:0;width:1px;background:rgba(255,255,255,0.15);pointer-events:none;display:none"></div>
-          </div>
-          <div class="chart-legend" style="margin-top:8px;padding:0 24px">
-            <div class="leg-item"><div class="leg-line" style="background:var(--green)"></div> Markedsverdi (kr)</div>
-            <div class="leg-item"><div class="leg-line" style="background:var(--text3)"></div><div style="width:20px;border-top:2px dashed var(--text3)"></div> Investert kapital</div>
-          </div>
+
         </div>
       </div>
 
@@ -1388,7 +1393,7 @@ function renderAnnualTable(){
 // ═══════════════════════════════════════
 // CHART TOOLTIPS
 // ═══════════════════════════════════════
-function attachTooltip(svgId, tooltipId, crosshairId, H, PB, contentFn){
+function attachTooltip(svgId, tooltipId, crosshairId, H, PB, W, contentFn){
   const svgEl = document.getElementById(svgId);
   const tooltip = document.getElementById(tooltipId);
   const crosshair = document.getElementById(crosshairId);
@@ -1402,11 +1407,11 @@ function attachTooltip(svgId, tooltipId, crosshairId, H, PB, contentFn){
 
   svgEl.addEventListener('mousemove', e => {
     const rect = svgEl.getBoundingClientRect();
-    const scaleX = 820 / rect.width;
+    const scaleX = W / rect.width;
     const mouseX = (e.clientX - rect.left) * scaleX;
 
     // Only show tooltip within data range
-    if(mouseX < 0 || mouseX > 820) {
+    if(mouseX < 0 || mouseX > W) {
       tooltip.style.display = 'none';
       if(crosshair) crosshair.style.display = 'none';
       return;
@@ -1441,7 +1446,7 @@ function attachTooltip(svgId, tooltipId, crosshairId, H, PB, contentFn){
     if(crosshair){
       crosshair.style.display = 'block';
       crosshair.style.left = pxX + 'px';
-      crosshair.style.height = ((H - PB) / 820 * rect.width) + 'px';
+      crosshair.style.height = ((H - PB) / W * rect.width) + 'px';
     }
   });
 
@@ -1496,10 +1501,11 @@ function drawMainChart(period,el){
     return sum;
   }
 
+  const W=500;
   const minDate=new Date(filteredSeries[0].d).getTime();
   const maxDate=new Date(filteredSeries[filteredSeries.length-1].d).getTime();
   const dateRange=maxDate-minDate||1;
-  const sx=d=>(new Date(d).getTime()-minDate)/dateRange*820;
+  const sx=d=>(new Date(d).getTime()-minDate)/dateRange*W;
 
   // X labels helper
   function mkXLabels(H,PB){
@@ -1507,7 +1513,7 @@ function drawMainChart(period,el){
     for(let i=0;i<=5;i++){
       const t=minDate+(maxDate-minDate)*i/5;
       const d=new Date(t);
-      labels.push(`<text x="${(820*i/5).toFixed(1)}" y="${H-4}" font-size="10" fill="#556058" font-family="Outfit,sans-serif" text-anchor="middle">${d.toLocaleDateString('nb-NO',{month:'short',year:'2-digit'})}</text>`);
+      labels.push(`<text x="${(W*i/5).toFixed(1)}" y="${H-4}" font-size="9" fill="#556058" font-family="Outfit,sans-serif" text-anchor="middle">${d.toLocaleDateString('nb-NO',{month:'short',year:'2-digit'})}</text>`);
     }
     return labels.join('');
   }
@@ -1528,7 +1534,7 @@ function drawMainChart(period,el){
     const navPath=mkP(navIdx);
     const osPath=mkP(osIdx);
     const navArea=navPath+` L${sx(navIdx[navIdx.length-1].d).toFixed(1)},${zero.toFixed(1)} L${sx(navIdx[0].d).toFixed(1)},${zero.toFixed(1)} Z`;
-    const grid=[0.25,0.5,0.75].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="820" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
+    const grid=[0.25,0.5,0.75].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="${W}" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
     // y labels
     const ySteps=[0,25,50,75,100].filter(v=>v>=minV&&v<=maxV);
     const yLabels=ySteps.map(v=>`<text x="4" y="${sy(v).toFixed(1)}" font-size="9" fill="#8a9690" font-family="Outfit,sans-serif" dominant-baseline="middle">${v>0?'+':''}${v}%</text>`).join('');
@@ -1539,7 +1545,7 @@ function drawMainChart(period,el){
         <stop offset="100%" stop-color="#4a8fc4" stop-opacity="0.01"/>
       </linearGradient></defs>
       ${grid}
-      <line x1="0" y1="${zero.toFixed(1)}" x2="820" y2="${zero.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <line x1="0" y1="${zero.toFixed(1)}" x2="${W}" y2="${zero.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
       ${yLabels}
       <path d="${navArea}" fill="url(#topGrad)"/>
       ${osPath?`<path d="${osPath}" fill="none" stroke="rgba(201,168,76,0.6)" stroke-width="1.5"/>`:''}
@@ -1556,7 +1562,7 @@ function drawMainChart(period,el){
       os: osIdx[i] ? osIdx[i].v : null,
       x: sx(p.d)
     }));
-    attachTooltip('main-chart-top', 'tooltip-top', 'crosshair-top', H, PB,
+    attachTooltip('main-chart-top', 'tooltip-top', 'crosshair-top', H, PB, W,
       pt => {
         const pan = pt.pan >= 0 ? `+${pt.pan.toFixed(1)}%` : `${pt.pan.toFixed(1)}%`;
         const os  = pt.os != null ? (pt.os >= 0 ? `+${pt.os.toFixed(1)}%` : `${pt.os.toFixed(1)}%`) : '—';
@@ -1581,7 +1587,7 @@ function drawMainChart(period,el){
     const mvPath=mkP(mvData);
     const invPath=mkP(invData);
     const areaPath=mvPath+` L${sx(mvData[mvData.length-1].d).toFixed(1)},${(H-PB).toFixed(1)} L${sx(mvData[0].d).toFixed(1)},${(H-PB).toFixed(1)} Z`;
-    const grid=[0.25,0.5,0.75,1].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="820" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
+    const grid=[0.25,0.5,0.75,1].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="${W}" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
     // y labels in M kr
     const yVals=[minKr+(maxKr-minKr)*0.25, minKr+(maxKr-minKr)*0.5, minKr+(maxKr-minKr)*0.75, maxKr];
     const yLabels=yVals.map(v=>`<text x="4" y="${sy(v).toFixed(1)}" font-size="9" fill="#8a9690" font-family="Outfit,sans-serif" dominant-baseline="middle">${(v/1000000).toFixed(1)}M</text>`).join('');
@@ -1608,7 +1614,7 @@ function drawMainChart(period,el){
       const inv = getInvestedAt(p.d);
       return { d: p.d, mv: p.v, inv, x: sx(p.d) };
     });
-    attachTooltip('main-chart-bottom', 'tooltip-bottom', 'crosshair-bottom', H, PB,
+    attachTooltip('main-chart-bottom', 'tooltip-bottom', 'crosshair-bottom', H, PB, W,
       pt => {
         const gain = pt.mv - pt.inv;
         const pct  = pt.inv > 0 ? gain / pt.inv : 0;
