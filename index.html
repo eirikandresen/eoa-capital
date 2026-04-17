@@ -187,6 +187,7 @@ svg.chart{width:100%;display:block;overflow:visible;}
     <ul class="tb-nav">
       <li><a class="active" onclick="showPage('oversikt',this)">Oversikt</a></li>
       <li><a onclick="showPage('avkastning',this)">Avkastning</a></li>
+      <li><a onclick="showPage('analyse',this)">Analyse</a></li>
       <li><a onclick="showPage('beholdning',this)">Beholdning</a></li>
       <li><a onclick="showPage('transaksjoner',this)">Transaksjoner</a></li>
       <li><a onclick="showPage('regnskap',this)">Regnskap</a></li>
@@ -342,6 +343,175 @@ svg.chart{width:100%;display:block;overflow:visible;}
               <th>År</th><th>PAN A</th><th>OSEFX</th><th>Differanse</th>
             </tr></thead>
             <tbody id="annual-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYSE -->
+    <div id="page-analyse" class="page">
+      <div class="sec-header">
+        <div><div class="sec-title">Analyse</div>
+        <div class="sec-sub">Risiko, skatt og rullerende avkastning</div></div>
+      </div>
+
+      <!-- Risikotall KPI -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+        <div class="kpi-card">
+          <div class="kpi-label">Sharpe Ratio</div>
+          <div class="kpi-value" id="r-sharpe">—</div>
+          <div class="kpi-note">Risikojustert avk. (rf = 4%)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Standardavvik (p.a.)</div>
+          <div class="kpi-value" id="r-vol">—</div>
+          <div class="kpi-note">Daglig volatilitet annualisert</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Max Drawdown</div>
+          <div class="kpi-value" id="r-dd">—</div>
+          <div class="kpi-note">Største fall fra topp til bunn</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Beste 12-mnd periode</div>
+          <div class="kpi-value" id="r-best">—</div>
+          <div class="kpi-note" id="r-best-period">—</div>
+        </div>
+      </div>
+
+      <!-- Rullerende 12-mnd avkastning -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div class="card-title">Rullerende 12-måneders avkastning — PAN A vs. OSEFX</div>
+        </div>
+        <div class="card-body">
+          <svg id="rolling-chart" class="chart" viewBox="0 0 820 200" style="height:200px"></svg>
+          <div class="chart-legend" style="margin-top:12px">
+            <div class="leg-item"><div class="leg-line" style="background:var(--green)"></div> PAN A (rullerende 12 mnd)</div>
+            <div class="leg-item"><div class="leg-line" style="background:var(--gold);opacity:.6"></div> OSEFX (rullerende 12 mnd)</div>
+            <div class="leg-item"><div class="leg-line" style="background:var(--border2);height:1px"></div> Nullinje</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skattekalkulator -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div class="card-title">Skattekalkulator — Fritaksmetoden (AS)</div>
+          <div style="font-size:12px;color:var(--text3)">Effektiv skattesats: 0,66% av gevinst (3% × 22%)</div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+            <!-- PAN -->
+            <div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--text);margin-bottom:16px">Pareto Aksje Norge A</div>
+              <div class="regn-item">
+                <div class="regn-key">Antall andeler</div>
+                <div class="regn-val" id="sk-pan-units">—</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key">Skattemessig inngangsverdi</div>
+                <div class="regn-val" id="sk-pan-cost">—</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key">Markedsverdi i dag</div>
+                <div class="regn-val" id="sk-pan-mv">—</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key">Skjermingsgrunnlag (est.)</div>
+                <div class="regn-val" id="sk-pan-skjerm">—</div>
+              </div>
+              <div class="regn-item" style="border-top:1px solid var(--border2);padding-top:14px;margin-top:4px">
+                <div class="regn-key" style="font-weight:600;color:var(--text)">Gevinst ved salg i dag</div>
+                <div class="regn-val pos-val" id="sk-pan-gain">—</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key" style="font-weight:600;color:var(--text)">Estimert skatt (0,66%)</div>
+                <div class="regn-val neg-val" id="sk-pan-tax">—</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key" style="font-weight:600;color:var(--text)">Netto etter skatt</div>
+                <div class="regn-val gold-val" id="sk-pan-net">—</div>
+              </div>
+            </div>
+
+            <!-- TEMA -->
+            <div id="sk-tema-section">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;color:var(--text);margin-bottom:16px">Tema Eiendom AS</div>
+              <div class="regn-item">
+                <div class="regn-key">Antall aksjer</div>
+                <div class="regn-val">33 500</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key">Skattemessig inngangsverdi</div>
+                <div class="regn-val">kr 11,10/aksje = 371 850 kr</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key">Siste omsetningskurs</div>
+                <div class="regn-val" id="sk-tema-nav">—</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key">Markedsverdi (siste kurs)</div>
+                <div class="regn-val" id="sk-tema-mv">—</div>
+              </div>
+              <div class="regn-item" style="border-top:1px solid var(--border2);padding-top:14px;margin-top:4px">
+                <div class="regn-key" style="font-weight:600;color:var(--text)">Gevinst ved salg</div>
+                <div class="regn-val pos-val" id="sk-tema-gain">—</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key" style="font-weight:600;color:var(--text)">Estimert skatt (0,66%)</div>
+                <div class="regn-val neg-val" id="sk-tema-tax">—</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key" style="font-weight:600;color:var(--text)">Netto etter skatt</div>
+                <div class="regn-val gold-val" id="sk-tema-net">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total -->
+          <div style="margin-top:20px;padding:16px;background:var(--bg3);border-radius:6px;border:1px solid var(--border2)">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+              <div>
+                <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Total gevinst</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500" class="pos-val" id="sk-total-gain">—</div>
+              </div>
+              <div>
+                <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Total skatt</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500" class="neg-val" id="sk-total-tax">—</div>
+              </div>
+              <div>
+                <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Netto etter skatt</div>
+                <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500" class="gold-val" id="sk-total-net">—</div>
+              </div>
+            </div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:12px;line-height:1.6">
+              ⚠️ <strong>Merk:</strong> Fritaksmetoden gjelder for aksjegevinster i AS. Effektiv skattesats er 3% × 22% = 0,66%. Skjermingsfradrag er ikke hensyntatt i totalberegningen. Konsulter revisor for nøyaktig skatteberegning.
+            </div>
+          </div>
+
+          <!-- Skjermingsfradrag forklaring -->
+          <div class="regn-note" style="margin-top:16px">
+            📊 <strong>Skjermingsfradrag:</strong> EOA Capital AS kan fremføre ubenyttet skjermingsfradrag. Skjermingsgrunnlag = kostpris × skjermingsrente (Skatteetaten fastsetter renten årlig — ca. 2–4%). Ubenyttet skjerming reduserer fremtidig skattepliktig gevinst. Sjekk faktisk skjermingsfradrag i Altinn / Skatteetaten.
+          </div>
+        </div>
+      </div>
+
+      <!-- Volatilitet over tid -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Verste 12-månedersperioder — PAN A</div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr>
+              <th>Periode</th>
+              <th>PAN A avk.</th>
+              <th>OSEFX avk.</th>
+              <th>Differanse</th>
+            </tr></thead>
+            <tbody id="worst-periods-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -721,6 +891,7 @@ function showPage(name,el){
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.tb-nav a').forEach(a=>a.classList.remove('active'));
   el.classList.add('active');
+  if(name==='analyse') renderAnalyse();
 }
 
 async function loadNavData(){
@@ -1257,6 +1428,228 @@ function drawMainChart(period,el){
 // ═══════════════════════════════════════
 // REGNSKAP
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// ANALYSE — Risiko, skatt, rullerende
+// ═══════════════════════════════════════
+
+function calcRiskMetrics(){
+  if(NAV_SERIES.length < 30) return null;
+
+  // Daily returns
+  const returns = [];
+  for(let i=1; i<NAV_SERIES.length; i++){
+    const r = NAV_SERIES[i].n / NAV_SERIES[i-1].n - 1;
+    returns.push(r);
+  }
+
+  // Annualized volatility
+  const mean = returns.reduce((s,r)=>s+r,0)/returns.length;
+  const variance = returns.reduce((s,r)=>s+Math.pow(r-mean,2),0)/returns.length;
+  const dailyVol = Math.sqrt(variance);
+  const annVol = dailyVol * Math.sqrt(252);
+
+  // Annualized return
+  const first = NAV_SERIES[0].n;
+  const last = NAV_SERIES[NAV_SERIES.length-1].n;
+  const years = NAV_SERIES.length / 252;
+  const annReturn = Math.pow(last/first, 1/years) - 1;
+
+  // Sharpe (rf = 4%)
+  const rf = 0.04;
+  const sharpe = (annReturn - rf) / annVol;
+
+  // Max drawdown
+  let peak = NAV_SERIES[0].n;
+  let maxDD = 0;
+  for(const r of NAV_SERIES){
+    if(r.n > peak) peak = r.n;
+    const dd = (peak - r.n) / peak;
+    if(dd > maxDD) maxDD = dd;
+  }
+
+  // Rolling 12-month returns — find best period
+  let bestRet = -Infinity, bestStart = '', bestEnd = '';
+  const navByDate = {};
+  NAV_SERIES.forEach(r => navByDate[r.d] = r.n);
+  const dates = NAV_SERIES.map(r=>r.d);
+
+  for(let i=0; i<NAV_SERIES.length; i++){
+    const endDate = NAV_SERIES[i].d;
+    const startDt = new Date(endDate);
+    startDt.setFullYear(startDt.getFullYear()-1);
+    const startDate = startDt.toISOString().slice(0,10);
+    const n0 = navOnDate(startDate);
+    if(!n0) continue;
+    const ret = NAV_SERIES[i].n / n0 - 1;
+    if(ret > bestRet){ bestRet=ret; bestStart=startDate; bestEnd=endDate; }
+  }
+
+  return { annVol, sharpe, maxDD, bestRet, bestStart, bestEnd };
+}
+
+function renderAnalyse(){
+  const nav = panNavNow;
+  const metrics = calcRiskMetrics();
+
+  if(metrics){
+    document.getElementById('r-sharpe').textContent = metrics.sharpe.toFixed(2);
+    document.getElementById('r-vol').textContent = fmtPct(metrics.annVol);
+    document.getElementById('r-dd').textContent = '−' + fmtPct(metrics.maxDD);
+    document.getElementById('r-best').textContent = fmtPct(metrics.bestRet);
+    document.getElementById('r-best-period').textContent =
+      new Date(metrics.bestStart).toLocaleDateString('nb-NO',{month:'short',year:'numeric'}) + ' – ' +
+      new Date(metrics.bestEnd).toLocaleDateString('nb-NO',{month:'short',year:'numeric'});
+
+    // Colour sharpe
+    const sEl = document.getElementById('r-sharpe');
+    sEl.className = 'kpi-value ' + (metrics.sharpe >= 1 ? 'pos-val' : metrics.sharpe >= 0 ? '' : 'neg-val');
+  }
+
+  // Skattekalkulator
+  const panUnits = totalUnits();
+  const panMV = panUnits * nav;
+  const panCost = totalInvested();
+  const panGain = panMV - panCost;
+  const panTax = panGain * 0.03 * 0.22;
+  const panNet = panMV - panTax;
+
+  // Skjermingsgrunnlag estimat (kostpris × 3% × år)
+  const years = yearsFromStart();
+  const skjerm = panCost * 0.03 * years;
+
+  document.getElementById('sk-pan-units').textContent = fmt(panUnits,4);
+  document.getElementById('sk-pan-cost').textContent = fmtKr(panCost);
+  document.getElementById('sk-pan-mv').textContent = fmtKr(panMV);
+  document.getElementById('sk-pan-skjerm').textContent = '~' + fmtKr(skjerm) + ' (est. 3% p.a.)';
+  document.getElementById('sk-pan-gain').textContent = (panGain>=0?'+':'') + fmtKr(panGain);
+  document.getElementById('sk-pan-tax').textContent = '−' + fmtKr(panTax);
+  document.getElementById('sk-pan-net').textContent = fmtKr(panNet);
+
+  const temaMV = 33500 * temaNav;
+  const temaCost = 33500 * 11.10;
+  const temaGain = temaMV - temaCost;
+  const temaTax = temaGain > 0 ? temaGain * 0.03 * 0.22 : 0;
+  const temaNet = temaMV - temaTax;
+
+  document.getElementById('sk-tema-nav').textContent = fmt(temaNav,0) + ' kr/aksje';
+  document.getElementById('sk-tema-mv').textContent = fmtKr(temaMV);
+  document.getElementById('sk-tema-gain').textContent = (temaGain>=0?'+':'') + fmtKr(temaGain);
+  document.getElementById('sk-tema-tax').textContent = temaGain > 0 ? '−' + fmtKr(temaTax) : '0 kr';
+  document.getElementById('sk-tema-net').textContent = fmtKr(temaNet);
+
+  const totalGain = panGain + temaGain;
+  const totalTax = panTax + temaTax;
+  const totalNet = panNet + temaNet;
+  document.getElementById('sk-total-gain').textContent = (totalGain>=0?'+':'') + fmtKr(totalGain);
+  document.getElementById('sk-total-tax').textContent = '−' + fmtKr(totalTax);
+  document.getElementById('sk-total-net').textContent = fmtKr(totalNet);
+
+  drawRollingChart();
+  renderWorstPeriods();
+}
+
+function drawRollingChart(){
+  if(NAV_SERIES.length < 252) return;
+
+  const W=820,H=160,PL=8,PR=8,PT=10,PB=30;
+  const cw=W-PL-PR, ch=H-PT-PB;
+
+  // Calculate rolling 12-month returns for each date
+  const panPoints=[], osPoints=[];
+
+  for(let i=0; i<NAV_SERIES.length; i++){
+    const r = NAV_SERIES[i];
+    const startDt = new Date(r.d);
+    startDt.setFullYear(startDt.getFullYear()-1);
+    const startDate = startDt.toISOString().slice(0,10);
+    const n0 = navOnDate(startDate);
+    const o0 = osefxOnDate(startDate);
+    if(n0) panPoints.push({d:r.d, v: r.n/n0-1});
+    if(o0 && r.o) osPoints.push({d:r.d, v: r.o/o0-1});
+  }
+
+  if(!panPoints.length) return;
+
+  const allVals = [...panPoints.map(p=>p.v), ...osPoints.map(p=>p.v)];
+  const minV = Math.min(...allVals, -0.05);
+  const maxV = Math.max(...allVals, 0.05);
+  const minD = new Date(panPoints[0].d).getTime();
+  const maxD = new Date(panPoints[panPoints.length-1].d).getTime();
+  const dateRange = maxD - minD || 1;
+
+  const sx = d => PL + (new Date(d).getTime()-minD)/dateRange*cw;
+  const sy = v => H-PB-(v-minV)/(maxV-minV)*ch;
+  const zero = sy(0);
+
+  const mkPath = pts => pts.map((p,i)=>(i===0?'M':'L')+sx(p.d).toFixed(1)+','+sy(p.v).toFixed(1)).join(' ');
+  const panPath = mkPath(panPoints);
+  const osPath = mkPath(osPoints);
+
+  // Area fill — green above zero, red below
+  const panArea = panPoints.map((p,i)=>{
+    if(i===0) return `M${sx(p.d).toFixed(1)},${zero.toFixed(1)}`;
+    return `L${sx(p.d).toFixed(1)},${sy(p.v).toFixed(1)}`;
+  }).join(' ') + ` L${sx(panPoints[panPoints.length-1].d).toFixed(1)},${zero.toFixed(1)} Z`;
+
+  // X labels
+  const years = [...new Set(panPoints.map(p=>p.d.slice(0,4)))];
+  const xLabels = years.filter((_,i)=>i%1===0).map(y=>{
+    const x = PL + (new Date(y+'-06-01').getTime()-minD)/dateRange*cw;
+    return `<text x="${x.toFixed(0)}" y="${H-4}" text-anchor="middle" font-size="10" fill="var(--text3)" font-family="Outfit,sans-serif">${y}</text>`;
+  }).join('');
+
+  document.getElementById('rolling-chart').innerHTML = `
+    <defs>
+      <linearGradient id="rollGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4caf7d" stop-opacity="0.15"/>
+        <stop offset="100%" stop-color="#4caf7d" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>
+    <line x1="${PL}" y1="${zero.toFixed(1)}" x2="${W-PR}" y2="${zero.toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+    <path d="${panArea}" fill="url(#rollGrad)"/>
+    <path d="${osPath}" fill="none" stroke="rgba(201,168,76,0.5)" stroke-width="1.5"/>
+    <path d="${panPath}" fill="none" stroke="var(--green)" stroke-width="2"/>
+    ${xLabels}
+  `;
+}
+
+function renderWorstPeriods(){
+  if(NAV_SERIES.length < 252){
+    document.getElementById('worst-periods-tbody').innerHTML='<tr><td colspan="4" style="color:var(--text3);text-align:center">Trenger minst 1 år med data</td></tr>';
+    return;
+  }
+
+  // Find all 12-month rolling returns, sort worst first
+  const periods = [];
+  for(let i=0; i<NAV_SERIES.length; i++){
+    const r = NAV_SERIES[i];
+    const startDt = new Date(r.d);
+    startDt.setFullYear(startDt.getFullYear()-1);
+    const startDate = startDt.toISOString().slice(0,10);
+    const n0 = navOnDate(startDate);
+    const o0 = osefxOnDate(startDate);
+    if(!n0) continue;
+    const panRet = r.n/n0-1;
+    const osRet = o0 && r.o ? r.o/o0-1 : null;
+    periods.push({start:startDate, end:r.d, panRet, osRet});
+  }
+
+  // Sort by panRet ascending, take worst 5
+  periods.sort((a,b)=>a.panRet-b.panRet);
+  const worst = periods.slice(0,5);
+
+  document.getElementById('worst-periods-tbody').innerHTML = worst.map(p=>`
+    <tr>
+      <td style="color:var(--text3);font-size:12px">
+        ${new Date(p.start).toLocaleDateString('nb-NO',{month:'short',year:'numeric'})} –
+        ${new Date(p.end).toLocaleDateString('nb-NO',{month:'short',year:'numeric'})}
+      </td>
+      <td class="${pc(p.panRet)}">${fmtPct(p.panRet)}</td>
+      <td class="${p.osRet!==null?pc(p.osRet):''}">${p.osRet!==null?fmtPct(p.osRet):'—'}</td>
+      <td class="${p.osRet!==null?pc(p.panRet-p.osRet):''}">${p.osRet!==null?fmtPct(p.panRet-p.osRet):'—'}</td>
+    </tr>`).join('');
+}
+
 function initRegnskap(){
   const years = Object.keys(ACCOUNTING_DATA).map(Number).sort((a,b)=>a-b); // asc for table
 
