@@ -1,7 +1,6 @@
 """
-fix_osefx.py
-One-time script to fix bad OSEFX values in nav_data.json.
-Run via GitHub Actions manually once, then delete.
+fix_osefx.py — v2
+Fixes bad OSEFX values. OSEFX.OL max ever ~1800, so anything > 2000 is bad.
 """
 import json
 from pathlib import Path
@@ -15,7 +14,7 @@ with open(OUT) as f:
 fixed = 0
 for row in data:
     o = row.get('o')
-    if o is not None and (o < 100 or o > 2500):
+    if o is not None and (o < 100 or o > 2000):
         print(f'Fixing {row["d"]}: {o} -> None')
         row['o'] = None
         fixed += 1
