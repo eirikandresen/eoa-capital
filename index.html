@@ -1405,6 +1405,13 @@ function attachTooltip(svgId, tooltipId, crosshairId, H, PB, contentFn){
     const scaleX = 820 / rect.width;
     const mouseX = (e.clientX - rect.left) * scaleX;
 
+    // Only show tooltip within data range
+    if(mouseX < 0 || mouseX > 820) {
+      tooltip.style.display = 'none';
+      if(crosshair) crosshair.style.display = 'none';
+      return;
+    }
+
     // Find closest data point
     let closest = data[0];
     let minDist = Math.abs(data[0].x - mouseX);
@@ -1413,20 +1420,28 @@ function attachTooltip(svgId, tooltipId, crosshairId, H, PB, contentFn){
       if(dist < minDist){ minDist = dist; closest = pt; }
     }
 
+    // Don't show if too far from nearest point (empty area)
+    const pixelDist = minDist / scaleX;
+    if(pixelDist > 30){
+      tooltip.style.display = 'none';
+      if(crosshair) crosshair.style.display = 'none';
+      return;
+    }
+
     // Position tooltip
     const pxX = closest.x / scaleX;
     const pxFromTop = e.clientY - rect.top;
 
     tooltip.innerHTML = contentFn(closest);
     tooltip.style.display = 'block';
-    tooltip.style.left = Math.max(60, Math.min(rect.width - 60, pxX)) + 'px';
+    tooltip.style.left = Math.max(80, Math.min(rect.width - 80, pxX)) + 'px';
     tooltip.style.top = Math.max(60, pxFromTop - 10) + 'px';
 
     // Crosshair
     if(crosshair){
       crosshair.style.display = 'block';
       crosshair.style.left = pxX + 'px';
-      crosshair.style.height = (chartH / 820 * rect.width) + 'px';
+      crosshair.style.height = ((H - PB) / 820 * rect.width) + 'px';
     }
   });
 
@@ -1484,7 +1499,7 @@ function drawMainChart(period,el){
   const minDate=new Date(filteredSeries[0].d).getTime();
   const maxDate=new Date(filteredSeries[filteredSeries.length-1].d).getTime();
   const dateRange=maxDate-minDate||1;
-  const sx=d=>8+(new Date(d).getTime()-minDate)/dateRange*804;
+  const sx=d=>(new Date(d).getTime()-minDate)/dateRange*820;
 
   // X labels helper
   function mkXLabels(H,PB){
@@ -1492,7 +1507,7 @@ function drawMainChart(period,el){
     for(let i=0;i<=5;i++){
       const t=minDate+(maxDate-minDate)*i/5;
       const d=new Date(t);
-      labels.push(`<text x="${(8+804*i/5).toFixed(1)}" y="${H-4}" font-size="10" fill="#556058" font-family="Outfit,sans-serif" text-anchor="middle">${d.toLocaleDateString('nb-NO',{month:'short',year:'2-digit'})}</text>`);
+      labels.push(`<text x="${(820*i/5).toFixed(1)}" y="${H-4}" font-size="10" fill="#556058" font-family="Outfit,sans-serif" text-anchor="middle">${d.toLocaleDateString('nb-NO',{month:'short',year:'2-digit'})}</text>`);
     }
     return labels.join('');
   }
@@ -1513,7 +1528,7 @@ function drawMainChart(period,el){
     const navPath=mkP(navIdx);
     const osPath=mkP(osIdx);
     const navArea=navPath+` L${sx(navIdx[navIdx.length-1].d).toFixed(1)},${zero.toFixed(1)} L${sx(navIdx[0].d).toFixed(1)},${zero.toFixed(1)} Z`;
-    const grid=[0.25,0.5,0.75].map(f=>`<line x1="8" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="812" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
+    const grid=[0.25,0.5,0.75].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="820" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
     // y labels
     const ySteps=[0,25,50,75,100].filter(v=>v>=minV&&v<=maxV);
     const yLabels=ySteps.map(v=>`<text x="0" y="${sy(v).toFixed(1)}" font-size="9" fill="#556058" font-family="Outfit,sans-serif" dominant-baseline="middle">${v>0?'+':''}${v}%</text>`).join('');
@@ -1524,7 +1539,7 @@ function drawMainChart(period,el){
         <stop offset="100%" stop-color="#4a8fc4" stop-opacity="0.01"/>
       </linearGradient></defs>
       ${grid}
-      <line x1="8" y1="${zero.toFixed(1)}" x2="812" y2="${zero.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      <line x1="0" y1="${zero.toFixed(1)}" x2="820" y2="${zero.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
       ${yLabels}
       <path d="${navArea}" fill="url(#topGrad)"/>
       ${osPath?`<path d="${osPath}" fill="none" stroke="rgba(201,168,76,0.6)" stroke-width="1.5"/>`:''}
@@ -1566,7 +1581,7 @@ function drawMainChart(period,el){
     const mvPath=mkP(mvData);
     const invPath=mkP(invData);
     const areaPath=mvPath+` L${sx(mvData[mvData.length-1].d).toFixed(1)},${(H-PB).toFixed(1)} L${sx(mvData[0].d).toFixed(1)},${(H-PB).toFixed(1)} Z`;
-    const grid=[0.25,0.5,0.75,1].map(f=>`<line x1="8" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="812" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
+    const grid=[0.25,0.5,0.75,1].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="820" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
     // y labels in M kr
     const yVals=[minKr+(maxKr-minKr)*0.25, minKr+(maxKr-minKr)*0.5, minKr+(maxKr-minKr)*0.75, maxKr];
     const yLabels=yVals.map(v=>`<text x="0" y="${sy(v).toFixed(1)}" font-size="9" fill="#556058" font-family="Outfit,sans-serif" dominant-baseline="middle">${(v/1000000).toFixed(1)}M</text>`).join('');
