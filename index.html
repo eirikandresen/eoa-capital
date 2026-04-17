@@ -252,7 +252,11 @@ svg.chart{width:100%;display:block;overflow:visible;}
         <div class="card-body" style="padding-bottom:16px">
           <!-- Top chart: PAN A + OSEFX indexed % -->
           <div style="font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">PAN A og OSEFX — indeksert avkastning</div>
-          <svg class="chart" id="main-chart-top" viewBox="0 0 820 180" style="height:180px"></svg>
+          <div style="position:relative">
+            <svg class="chart" id="main-chart-top" viewBox="0 0 820 180" style="height:180px"></svg>
+            <div id="tooltip-top" style="position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--text);pointer-events:none;z-index:100;white-space:nowrap;display:none;transform:translate(-50%,-110%)"></div>
+            <div id="crosshair-top" style="position:absolute;top:0;width:1px;background:rgba(255,255,255,0.15);pointer-events:none;display:none"></div>
+          </div>
           <div class="chart-legend" style="margin-bottom:16px;margin-top:8px">
             <div class="leg-item"><div class="leg-line" style="background:var(--blue)"></div> PAN A (indeksert)</div>
             <div class="leg-item"><div class="leg-line" style="background:var(--gold);opacity:.7"></div> OSEFX (indeksert)</div>
@@ -261,7 +265,11 @@ svg.chart{width:100%;display:block;overflow:visible;}
           <div style="border-top:1px solid var(--border);margin:0 0 16px"></div>
           <!-- Bottom chart: portfolio MV in kr -->
           <div style="font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Porteføljeverdi — kr</div>
-          <svg class="chart" id="main-chart-bottom" viewBox="0 0 820 160" style="height:160px"></svg>
+          <div style="position:relative">
+            <svg class="chart" id="main-chart-bottom" viewBox="0 0 820 160" style="height:160px"></svg>
+            <div id="tooltip-bottom" style="position:absolute;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--text);pointer-events:none;z-index:100;white-space:nowrap;display:none;transform:translate(-50%,-110%)"></div>
+            <div id="crosshair-bottom" style="position:absolute;top:0;width:1px;background:rgba(255,255,255,0.15);pointer-events:none;display:none"></div>
+          </div>
           <div class="chart-legend" style="margin-top:8px">
             <div class="leg-item"><div class="leg-line" style="background:var(--green)"></div> Markedsverdi (kr)</div>
             <div class="leg-item"><div class="leg-line" style="background:var(--text3)"></div><div style="width:20px;border-top:2px dashed var(--text3)"></div> Investert kapital</div>
@@ -905,6 +913,10 @@ let temaNav = 65;
 let temaLastDate = '15.04.2026';
 let currentChartPeriod = 'all';
 
+// Chart data stored for tooltips
+let chartDataTop = [];    // [{d, pan, os}] indexed %
+let chartDataBottom = []; // [{d, mv, inv}] in kr
+
 // ═══════════════════════════════════════
 // TOGGLE TEMA
 // ═══════════════════════════════════════
@@ -1373,6 +1385,57 @@ function renderAnnualTable(){
 // ═══════════════════════════════════════
 // CHART
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// CHART TOOLTIPS
+// ═══════════════════════════════════════
+function attachTooltip(svgId, tooltipId, crosshairId, H, PB, contentFn){
+  const svgEl = document.getElementById(svgId);
+  const tooltip = document.getElementById(tooltipId);
+  const crosshair = document.getElementById(crosshairId);
+  if(!svgEl || !tooltip) return;
+
+  // Get the data for this chart
+  const data = svgId.includes('top') ? chartDataTop : chartDataBottom;
+  if(!data.length) return;
+
+  const chartH = H - PB;
+
+  svgEl.addEventListener('mousemove', e => {
+    const rect = svgEl.getBoundingClientRect();
+    const scaleX = 820 / rect.width;
+    const mouseX = (e.clientX - rect.left) * scaleX;
+
+    // Find closest data point
+    let closest = data[0];
+    let minDist = Math.abs(data[0].x - mouseX);
+    for(const pt of data){
+      const dist = Math.abs(pt.x - mouseX);
+      if(dist < minDist){ minDist = dist; closest = pt; }
+    }
+
+    // Position tooltip
+    const pxX = closest.x / scaleX;
+    const pxFromTop = e.clientY - rect.top;
+
+    tooltip.innerHTML = contentFn(closest);
+    tooltip.style.display = 'block';
+    tooltip.style.left = Math.max(60, Math.min(rect.width - 60, pxX)) + 'px';
+    tooltip.style.top = Math.max(60, pxFromTop - 10) + 'px';
+
+    // Crosshair
+    if(crosshair){
+      crosshair.style.display = 'block';
+      crosshair.style.left = pxX + 'px';
+      crosshair.style.height = (chartH / 820 * rect.width) + 'px';
+    }
+  });
+
+  svgEl.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+    if(crosshair) crosshair.style.display = 'none';
+  });
+}
+
 function drawMainChart(period,el){
   if(el){
     document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
@@ -1470,6 +1533,23 @@ function drawMainChart(period,el){
       ${PAN_TX.filter(tx=>tx.date>=cutoff).map(tx=>`<line x1="${sx(tx.date).toFixed(1)}" y1="${PT}" x2="${sx(tx.date).toFixed(1)}" y2="${H-PB}" stroke="rgba(201,168,76,0.15)" stroke-width="1" stroke-dasharray="2,4"/>`).join('')}
       ${mkXLabels(H,PB)}
     `;
+
+    // Store data for tooltip
+    chartDataTop = navIdx.map((p,i) => ({
+      d: p.d,
+      pan: p.v,
+      os: osIdx[i] ? osIdx[i].v : null,
+      x: sx(p.d)
+    }));
+    attachTooltip('main-chart-top', 'tooltip-top', 'crosshair-top', H, PB,
+      pt => {
+        const pan = pt.pan >= 0 ? `+${pt.pan.toFixed(1)}%` : `${pt.pan.toFixed(1)}%`;
+        const os  = pt.os != null ? (pt.os >= 0 ? `+${pt.os.toFixed(1)}%` : `${pt.os.toFixed(1)}%`) : '—';
+        return `<div style="font-size:11px;color:var(--text3);margin-bottom:4px">${new Date(pt.d).toLocaleDateString('nb-NO',{day:'numeric',month:'short',year:'numeric'})}</div>
+                <div style="color:var(--blue)">PAN A: <strong>${pan}</strong></div>
+                <div style="color:var(--gold)">OSEFX: <strong>${os}</strong></div>`;
+      }
+    );
   }
 
   // ── BOTTOM CHART: Portfolio MV in kr ─────────────────
@@ -1507,6 +1587,22 @@ function drawMainChart(period,el){
       ${PAN_TX.filter(tx=>tx.date>=cutoff).map(tx=>`<line x1="${sx(tx.date).toFixed(1)}" y1="${PT}" x2="${sx(tx.date).toFixed(1)}" y2="${H-PB}" stroke="rgba(201,168,76,0.15)" stroke-width="1" stroke-dasharray="2,4"/>`).join('')}
       ${mkXLabels(H,PB)}
     `;
+
+    // Store data for tooltip
+    chartDataBottom = mvData.map(p => {
+      const inv = getInvestedAt(p.d);
+      return { d: p.d, mv: p.v, inv, x: sx(p.d) };
+    });
+    attachTooltip('main-chart-bottom', 'tooltip-bottom', 'crosshair-bottom', H, PB,
+      pt => {
+        const gain = pt.mv - pt.inv;
+        const pct  = pt.inv > 0 ? gain / pt.inv : 0;
+        return `<div style="font-size:11px;color:var(--text3);margin-bottom:4px">${new Date(pt.d).toLocaleDateString('nb-NO',{day:'numeric',month:'short',year:'numeric'})}</div>
+                <div style="color:var(--green)">Verdi: <strong>${fmtKr(pt.mv)}</strong></div>
+                <div style="color:var(--text2)">Investert: <strong>${fmtKr(pt.inv)}</strong></div>
+                <div style="color:${pct>=0?'var(--green)':'var(--red)'}">Gevinst: <strong>${(pct>=0?'+':'')+fmtPct(pct)} (${(gain>=0?'+':'')+fmtKr(gain)})</strong></div>`;
+      }
+    );
   }
 }
 
