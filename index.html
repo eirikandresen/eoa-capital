@@ -241,7 +241,7 @@ svg.chart{width:100%;display:block;overflow:visible;}
 
       <div class="card">
         <div class="card-head">
-          <div class="card-title">Verdiutvikling — Din portefølje vs. fondet PAN A vs. OSEFX</div>
+          <div class="card-title">Verdiutvikling</div>
           <div class="period-tabs">
             <button class="ptab active" onclick="drawMainChart('all',this)">Fra start</button>
             <button class="ptab" onclick="drawMainChart('3y',this)">3 År</button>
@@ -249,13 +249,22 @@ svg.chart{width:100%;display:block;overflow:visible;}
             <button class="ptab" onclick="drawMainChart('ytd',this)">YTD</button>
           </div>
         </div>
-        <div class="card-body">
-          <svg class="chart" id="main-chart" viewBox="0 0 820 240" style="height:240px"></svg>
-          <div class="chart-legend">
-            <div class="leg-item"><div class="leg-line" style="background:var(--green)"></div> Porteføljeverdi (kr)</div>
-            <div class="leg-item"><div class="leg-line" style="background:var(--blue)"></div> PAN A NAV (indeksert)</div>
-            <div class="leg-item"><div class="leg-line" style="background:var(--gold);opacity:.6"></div> OSEFX (indeksert)</div>
-            <div class="leg-item"><div class="leg-line" style="background:var(--text3);height:1px;border-top:2px dashed var(--text3)"></div> Investert kapital</div>
+        <div class="card-body" style="padding-bottom:16px">
+          <!-- Top chart: PAN A + OSEFX indexed % -->
+          <div style="font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">PAN A og OSEFX — indeksert avkastning</div>
+          <svg class="chart" id="main-chart-top" viewBox="0 0 820 180" style="height:180px"></svg>
+          <div class="chart-legend" style="margin-bottom:16px;margin-top:8px">
+            <div class="leg-item"><div class="leg-line" style="background:var(--blue)"></div> PAN A (indeksert)</div>
+            <div class="leg-item"><div class="leg-line" style="background:var(--gold);opacity:.7"></div> OSEFX (indeksert)</div>
+          </div>
+          <!-- Divider -->
+          <div style="border-top:1px solid var(--border);margin:0 0 16px"></div>
+          <!-- Bottom chart: portfolio MV in kr -->
+          <div style="font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Porteføljeverdi — kr</div>
+          <svg class="chart" id="main-chart-bottom" viewBox="0 0 820 160" style="height:160px"></svg>
+          <div class="chart-legend" style="margin-top:8px">
+            <div class="leg-item"><div class="leg-line" style="background:var(--green)"></div> Markedsverdi (kr)</div>
+            <div class="leg-item"><div class="leg-line" style="background:var(--text3)"></div><div style="width:20px;border-top:2px dashed var(--text3)"></div> Investert kapital</div>
           </div>
         </div>
       </div>
@@ -616,6 +625,72 @@ svg.chart{width:100%;display:block;overflow:visible;}
       </div>
 
       <div class="regn-note">📋 <strong>Kilde:</strong> Brønnøysundregistrene via proff.no. Oppdater tallene ved å redigere <code>ACCOUNTING_DATA</code> i <code>index.html</code>.</div>
+
+      <!-- Skjermingsfradrag per år -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-head">
+          <div class="card-title">Skjermingsfradrag — historikk og akkumulert</div>
+          <div style="font-size:12px;color:var(--text3)">Grunnlag: innskutt egenkapital × skjermingsrente</div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr>
+              <th>År</th>
+              <th>Innskutt EK (primo)</th>
+              <th>Skjermingsrente</th>
+              <th>Årets skjerming</th>
+              <th>Akkumulert skjerming</th>
+            </tr></thead>
+            <tbody id="skjerm-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Likvidasjonsskatt -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-head">
+          <div class="card-title">Likvidasjonsberegning — hva sitter du igjen med privat?</div>
+          <div style="font-size:12px;color:var(--text3)">Ved full realisasjon av alle eiendeler i dag</div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:20px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Steg 1 — Inne i AS (fritaksmetoden)</div>
+              <div class="regn-item"><div class="regn-key">Markedsverdi PAN A</div><div class="regn-val" id="liq-pan-mv">—</div></div>
+              <div class="regn-item"><div class="regn-key">Kostpris PAN A</div><div class="regn-val" id="liq-pan-cost">—</div></div>
+              <div class="regn-item"><div class="regn-key">Gevinst PAN A</div><div class="regn-val pos-val" id="liq-pan-gain">—</div></div>
+              <div class="regn-item"><div class="regn-key">Skatt PAN A (0,66%)</div><div class="regn-val neg-val" id="liq-pan-tax">—</div></div>
+              <div class="regn-item"><div class="regn-key">Markedsverdi Tema</div><div class="regn-val" id="liq-tema-mv">—</div></div>
+              <div class="regn-item"><div class="regn-key">Kostpris Tema (kr 11,10)</div><div class="regn-val">371 850 kr</div></div>
+              <div class="regn-item"><div class="regn-key">Gevinst Tema</div><div class="regn-val pos-val" id="liq-tema-gain">—</div></div>
+              <div class="regn-item"><div class="regn-key">Skatt Tema (0,66%)</div><div class="regn-val neg-val" id="liq-tema-tax">—</div></div>
+              <div class="regn-item" style="border-top:1px solid var(--border2);padding-top:14px;margin-top:4px">
+                <div class="regn-key" style="font-weight:600;color:var(--text)">Kontanter i AS etter skatt</div>
+                <div class="regn-val gold-val" id="liq-as-after">—</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Steg 2 — Utdeling til deg privat</div>
+              <div class="regn-item"><div class="regn-key">Kontanter i AS</div><div class="regn-val" id="liq-as-kontanter">—</div></div>
+              <div class="regn-item"><div class="regn-key">− Din inngangsverdi (innskutt EK)</div><div class="regn-val" id="liq-inngang">—</div></div>
+              <div class="regn-item"><div class="regn-key">− Akkumulert skjerming</div><div class="regn-val" id="liq-skjerm">—</div></div>
+              <div class="regn-item"><div class="regn-key">Skattepliktig utdeling</div><div class="regn-val pos-val" id="liq-skattepliktig">—</div></div>
+              <div class="regn-item"><div class="regn-key">Skatt privat (37,84%)</div><div class="regn-val neg-val" id="liq-priv-tax">—</div></div>
+              <div class="regn-item" style="border-top:1px solid var(--border2);padding-top:14px;margin-top:4px">
+                <div class="regn-key" style="font-weight:600;color:var(--text)">Du sitter igjen med privat</div>
+                <div class="regn-val gold-val" style="font-family:'Cormorant Garamond',serif;font-size:22px" id="liq-privat-netto">—</div>
+              </div>
+              <div class="regn-item">
+                <div class="regn-key">Effektiv total skattesats</div>
+                <div class="regn-val" id="liq-eff-rate">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="regn-note">
+            ⚠️ <strong>Forutsetninger:</strong> Fritaksmetoden 0,66% på gevinst i AS. Aksjonærmodellen 37,84% på utdeling over inngangsverdi + skjerming. Din personlige inngangsverdi = innskutt EK kr 2 772 000. Skjermingsfradrag reduserer skattepliktig utdeling. Konsulter revisor for nøyaktig beregning.
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -1306,34 +1381,27 @@ function drawMainChart(period,el){
   }
 
   const nav=panNavNow;
-  const W=820,H=200,PL=0,PR=0,PT=10,PB=30;
-  const cw=W-PL-PR, ch=H-PT-PB;
 
-  // Build portfolio MV series from NAV series
+  // Build filtered series
   let filteredSeries=[...NAV_SERIES];
   if(!filteredSeries.length){
-    // Fallback: use only transaction dates
     filteredSeries=PAN_TX.map(tx=>({d:tx.date,n:tx.nav,o:null}));
     filteredSeries.push({d:new Date().toISOString().slice(0,10),n:nav,o:null});
   }
 
-  // Filter by period
   const now=new Date();
-  let cutoff='1900-01-01';
+  let cutoff=PAN_TX[0].date;
   if(period==='1y') cutoff=new Date(now-365*24*3600*1000).toISOString().slice(0,10);
   else if(period==='3y') cutoff=new Date(now-3*365*24*3600*1000).toISOString().slice(0,10);
   else if(period==='ytd') cutoff=now.getFullYear()+'-01-01';
-  else cutoff=PAN_TX[0].date;
 
   filteredSeries=filteredSeries.filter(r=>r.d>=cutoff);
   if(filteredSeries.length<2) filteredSeries=[...NAV_SERIES].filter(r=>r.d>=PAN_TX[0].date);
   if(!filteredSeries.length) return;
 
-  // Build portfolio MV at each date
   function getPortfolioMV(dateStr){
     const navVal=NAV_MAP[dateStr]||navOnDate(dateStr);
     if(!navVal) return null;
-    // Units held at that date
     let units=0;
     for(const tx of PAN_TX){
       if(tx.date<=dateStr) units+=tx.type==='kjøp'?tx.units:-tx.units;
@@ -1341,7 +1409,6 @@ function drawMainChart(period,el){
     }
     return units*navVal;
   }
-
   function getInvestedAt(dateStr){
     let sum=0;
     for(const tx of PAN_TX){
@@ -1351,78 +1418,96 @@ function drawMainChart(period,el){
     return sum;
   }
 
-  // Index NAV and OSEFX to 100 at period start
-  const n0=filteredSeries[0].n;
-  const o0=filteredSeries[0].o;
-
-  const mvData=filteredSeries.map(r=>({d:r.d,v:getPortfolioMV(r.d)})).filter(r=>r.v!==null&&r.v>0);
-  const navIdx=filteredSeries.map(r=>({d:r.d,v:r.n/n0*100}));
-  const osefxIdx=filteredSeries.filter(r=>r.o).map(r=>({d:r.d,v:r.o/o0*100}));
-  const invData=filteredSeries.map(r=>({d:r.d,v:getInvestedAt(r.d)})).filter(r=>r.v>0);
-
-  // Scale helpers
-  const allMV=mvData.map(r=>r.v);
-  const allInv=invData.map(r=>r.v);
   const minDate=new Date(filteredSeries[0].d).getTime();
   const maxDate=new Date(filteredSeries[filteredSeries.length-1].d).getTime();
   const dateRange=maxDate-minDate||1;
+  const sx=d=>8+(new Date(d).getTime()-minDate)/dateRange*804;
 
-  // Use dual axes: left = kr (MV + invested), right = index (PAN NAV + OSEFX)
-  const allKr=[...allMV,...allInv].filter(Boolean);
-  const minKr=Math.min(...allKr)*0.95;
-  const maxKr=Math.max(...allKr)*1.05;
-  const allIdx=[...navIdx.map(r=>r.v),...osefxIdx.map(r=>r.v)];
-  const minIdx=Math.min(...allIdx)*0.95;
-  const maxIdx=Math.max(...allIdx)*1.05;
-
-  const sx=d=>PL+(new Date(d).getTime()-minDate)/dateRange*cw;
-  const syKr=v=>H-PB-(v-minKr)/(maxKr-minKr)*ch;
-  const syIdx=v=>H-PB-(v-minIdx)/(maxIdx-minIdx)*ch;
-
-  const mkPath=(pts,syFn)=>pts.map((p,i)=>(i===0?'M':'L')+sx(p.d).toFixed(1)+','+syFn(p.v).toFixed(1)).join(' ');
-  const mvPath=mkPath(mvData,syKr);
-  const invPath=mkPath(invData,syKr);
-  const navPath=mkPath(navIdx,syIdx);
-  const osPath=mkPath(osefxIdx,syIdx);
-  const areaPath=mvPath+` L${sx(mvData[mvData.length-1].d).toFixed(1)},${(H-PB).toFixed(1)} L${sx(mvData[0].d).toFixed(1)},${(H-PB).toFixed(1)} Z`;
-
-  // X-axis labels
-  const nLabels=5;
-  const xLabels=[];
-  for(let i=0;i<=nLabels;i++){
-    const t=minDate+(maxDate-minDate)*i/nLabels;
-    const d=new Date(t);
-    xLabels.push({x:PL+cw*i/nLabels,label:d.toLocaleDateString('nb-NO',{month:'short',year:'2-digit'})});
+  // X labels helper
+  function mkXLabels(H,PB){
+    const labels=[];
+    for(let i=0;i<=5;i++){
+      const t=minDate+(maxDate-minDate)*i/5;
+      const d=new Date(t);
+      labels.push(`<text x="${(8+804*i/5).toFixed(1)}" y="${H-4}" font-size="10" fill="#556058" font-family="Outfit,sans-serif" text-anchor="middle">${d.toLocaleDateString('nb-NO',{month:'short',year:'2-digit'})}</text>`);
+    }
+    return labels.join('');
   }
 
-  const svg=document.getElementById('main-chart');
-  svg.innerHTML=`
-    <defs>
-      <linearGradient id="mvGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#4caf7d" stop-opacity="0.18"/>
+  // ── TOP CHART: PAN A + OSEFX indexed ─────────────────
+  {
+    const W=820,H=180,PT=10,PB=28,ch=H-PT-PB;
+    const n0=filteredSeries[0].n;
+    const o0=filteredSeries[0].o;
+    const navIdx=filteredSeries.map(r=>({d:r.d,v:(r.n/n0-1)*100}));
+    const osIdx=filteredSeries.filter(r=>r.o).map(r=>({d:r.d,v:(r.o/o0-1)*100}));
+    const allV=[...navIdx.map(r=>r.v),...osIdx.map(r=>r.v)];
+    const minV=Math.min(...allV,-2);
+    const maxV=Math.max(...allV,2);
+    const sy=v=>H-PB-(v-minV)/(maxV-minV)*ch;
+    const zero=sy(0);
+    const mkP=pts=>pts.map((p,i)=>(i===0?'M':'L')+sx(p.d).toFixed(1)+','+sy(p.v).toFixed(1)).join(' ');
+    const navPath=mkP(navIdx);
+    const osPath=mkP(osIdx);
+    const navArea=navPath+` L${sx(navIdx[navIdx.length-1].d).toFixed(1)},${zero.toFixed(1)} L${sx(navIdx[0].d).toFixed(1)},${zero.toFixed(1)} Z`;
+    const grid=[0.25,0.5,0.75].map(f=>`<line x1="8" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="812" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
+    // y labels
+    const ySteps=[0,25,50,75,100].filter(v=>v>=minV&&v<=maxV);
+    const yLabels=ySteps.map(v=>`<text x="0" y="${sy(v).toFixed(1)}" font-size="9" fill="#556058" font-family="Outfit,sans-serif" dominant-baseline="middle">${v>0?'+':''}${v}%</text>`).join('');
+
+    document.getElementById('main-chart-top').innerHTML=`
+      <defs><linearGradient id="topGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4a8fc4" stop-opacity="0.15"/>
+        <stop offset="100%" stop-color="#4a8fc4" stop-opacity="0.01"/>
+      </linearGradient></defs>
+      ${grid}
+      <line x1="8" y1="${zero.toFixed(1)}" x2="812" y2="${zero.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+      ${yLabels}
+      <path d="${navArea}" fill="url(#topGrad)"/>
+      ${osPath?`<path d="${osPath}" fill="none" stroke="rgba(201,168,76,0.6)" stroke-width="1.5"/>`:''}
+      <path d="${navPath}" fill="none" stroke="var(--blue)" stroke-width="2"/>
+      <circle cx="${sx(navIdx[navIdx.length-1].d).toFixed(1)}" cy="${sy(navIdx[navIdx.length-1].v).toFixed(1)}" r="4" fill="var(--blue)"/>
+      ${PAN_TX.filter(tx=>tx.date>=cutoff).map(tx=>`<line x1="${sx(tx.date).toFixed(1)}" y1="${PT}" x2="${sx(tx.date).toFixed(1)}" y2="${H-PB}" stroke="rgba(201,168,76,0.15)" stroke-width="1" stroke-dasharray="2,4"/>`).join('')}
+      ${mkXLabels(H,PB)}
+    `;
+  }
+
+  // ── BOTTOM CHART: Portfolio MV in kr ─────────────────
+  {
+    const W=820,H=160,PT=10,PB=28,ch=H-PT-PB;
+    const mvData=filteredSeries.map(r=>({d:r.d,v:getPortfolioMV(r.d)})).filter(r=>r.v!==null&&r.v>0);
+    const invData=filteredSeries.map(r=>({d:r.d,v:getInvestedAt(r.d)})).filter(r=>r.v>0);
+    if(!mvData.length) return;
+    const allKr=[...mvData.map(r=>r.v),...invData.map(r=>r.v)].filter(Boolean);
+    const minKr=Math.min(...allKr)*0.92;
+    const maxKr=Math.max(...allKr)*1.05;
+    const sy=v=>H-PB-(v-minKr)/(maxKr-minKr)*ch;
+    const mkP=pts=>pts.map((p,i)=>(i===0?'M':'L')+sx(p.d).toFixed(1)+','+sy(p.v).toFixed(1)).join(' ');
+    const mvPath=mkP(mvData);
+    const invPath=mkP(invData);
+    const areaPath=mvPath+` L${sx(mvData[mvData.length-1].d).toFixed(1)},${(H-PB).toFixed(1)} L${sx(mvData[0].d).toFixed(1)},${(H-PB).toFixed(1)} Z`;
+    const grid=[0.25,0.5,0.75,1].map(f=>`<line x1="8" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="812" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
+    // y labels in M kr
+    const yVals=[minKr+(maxKr-minKr)*0.25, minKr+(maxKr-minKr)*0.5, minKr+(maxKr-minKr)*0.75, maxKr];
+    const yLabels=yVals.map(v=>`<text x="0" y="${sy(v).toFixed(1)}" font-size="9" fill="#556058" font-family="Outfit,sans-serif" dominant-baseline="middle">${(v/1000000).toFixed(1)}M</text>`).join('');
+    const last=mvData[mvData.length-1];
+
+    document.getElementById('main-chart-bottom').innerHTML=`
+      <defs><linearGradient id="mvGrad2" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4caf7d" stop-opacity="0.2"/>
         <stop offset="100%" stop-color="#4caf7d" stop-opacity="0.01"/>
-      </linearGradient>
-    </defs>
-    <!-- Grid lines -->
-    ${[0.25,0.5,0.75,1].map(f=>`<line x1="${PL}" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="${W-PR}" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('')}
-    <!-- Area -->
-    <path d="${areaPath}" fill="url(#mvGrad)"/>
-    <!-- Invested -->
-    <path d="${invPath}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-dasharray="5,3"/>
-    <!-- OSEFX -->
-    ${osPath?`<path d="${osPath}" fill="none" stroke="rgba(201,168,76,0.5)" stroke-width="1.5"/>`:''}
-    <!-- PAN NAV indexed -->
-    <path d="${navPath}" fill="none" stroke="rgba(74,143,196,0.7)" stroke-width="1.5"/>
-    <!-- Portfolio MV -->
-    <path d="${mvPath}" fill="none" stroke="#4caf7d" stroke-width="2.5"/>
-    <!-- Endpoint -->
-    <circle cx="${sx(mvData[mvData.length-1].d).toFixed(1)}" cy="${syKr(mvData[mvData.length-1].v).toFixed(1)}" r="4" fill="#4caf7d"/>
-    <circle cx="${sx(mvData[mvData.length-1].d).toFixed(1)}" cy="${syKr(mvData[mvData.length-1].v).toFixed(1)}" r="8" fill="#4caf7d" opacity="0.15"/>
-    <!-- Transaction markers -->
-    ${PAN_TX.filter(tx=>tx.date>=cutoff).map(tx=>`<line x1="${sx(tx.date).toFixed(1)}" y1="${PT}" x2="${sx(tx.date).toFixed(1)}" y2="${H-PB}" stroke="rgba(201,168,76,0.2)" stroke-width="1" stroke-dasharray="2,4"/>`).join('')}
-    <!-- X labels -->
-    ${xLabels.map(l=>`<text x="${l.x.toFixed(1)}" y="${H-2}" font-size="10" fill="#556058" font-family="Outfit,sans-serif" text-anchor="middle">${l.label}</text>`).join('')}
-  `;
+      </linearGradient></defs>
+      ${grid}
+      ${yLabels}
+      <path d="${areaPath}" fill="url(#mvGrad2)"/>
+      <path d="${invPath}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <path d="${mvPath}" fill="none" stroke="var(--green)" stroke-width="2.5"/>
+      <circle cx="${sx(last.d).toFixed(1)}" cy="${sy(last.v).toFixed(1)}" r="4" fill="var(--green)"/>
+      <circle cx="${sx(last.d).toFixed(1)}" cy="${sy(last.v).toFixed(1)}" r="8" fill="var(--green)" opacity="0.15"/>
+      ${PAN_TX.filter(tx=>tx.date>=cutoff).map(tx=>`<line x1="${sx(tx.date).toFixed(1)}" y1="${PT}" x2="${sx(tx.date).toFixed(1)}" y2="${H-PB}" stroke="rgba(201,168,76,0.15)" stroke-width="1" stroke-dasharray="2,4"/>`).join('')}
+      ${mkXLabels(H,PB)}
+    `;
+  }
 }
 
 // ═══════════════════════════════════════
@@ -1651,6 +1736,88 @@ function renderWorstPeriods(){
 }
 
 function initRegnskap(){
+  // Skjermingsrenter fastsatt av Skatteetaten
+  const SKJERM_RENTER = {
+    2022: 0.017,
+    2023: 0.033,
+    2024: 0.040,
+    2025: 0.039,  // Foreløpig
+  };
+
+  // Innskutt EK primo hvert år (fra balansen — bruker fjorårets slutt)
+  const INNSKUTT_EK_PRIMO = {
+    2022: 30000,      // primo 2022 = EK innskutt 2021
+    2023: 366000,     // primo 2023 = EK innskutt 2022
+    2024: 1170000,    // primo 2024 = EK innskutt 2023
+    2025: 1770000,    // primo 2025 = EK innskutt 2024
+  };
+
+  // Beregn skjerming per år og akkumulert
+  let akkumulert = 0;
+  const skjermRows = [];
+  Object.keys(SKJERM_RENTER).sort().forEach(year => {
+    const primo = INNSKUTT_EK_PRIMO[year] || 0;
+    const rente = SKJERM_RENTER[year];
+    const aarsSkjerm = primo * rente;
+    akkumulert += aarsSkjerm;
+    skjermRows.push({ year, primo, rente, aarsSkjerm, akkumulert });
+  });
+
+  document.getElementById('skjerm-tbody').innerHTML = skjermRows.map(r=>`
+    <tr>
+      <td style="font-weight:500;color:var(--text)">${r.year}</td>
+      <td>${fmtKr(r.primo)}</td>
+      <td>${(r.rente*100).toFixed(1)}%</td>
+      <td class="pos-val">${fmtKr(r.aarsSkjerm)}</td>
+      <td style="font-weight:600;color:var(--gold2)">${fmtKr(r.akkumulert)}</td>
+    </tr>`).join('');
+
+  // ── Likvidasjonsberegning ────────────────────────────
+  const nav = panNavNow;
+  const panUnits = totalUnits();
+  const panMV = panUnits * nav;
+  const panCost = totalInvested();
+  const panGain = panMV - panCost;
+  const panTaxAS = Math.max(0, panGain * 0.03 * 0.22);
+
+  const temaMV = 33500 * temaNav;
+  const temaCost = 33500 * 11.10;
+  const temaGain = Math.max(0, temaMV - temaCost);
+  const temaTaxAS = temaGain * 0.03 * 0.22;
+
+  // Antar også bankinnskudd fra siste balanse (2025: 6000 kr)
+  const bankAS = 6000;
+  const kontanterAS = panMV + temaMV + bankAS - panTaxAS - temaTaxAS;
+
+  // Steg 2 — privat
+  const inngangPrivat = 2772000; // innskutt EK 2025
+  const skjermFradrag = akkumulert;
+  const skattepliktig = Math.max(0, kontanterAS - inngangPrivat - skjermFradrag);
+  const privTax = skattepliktig * 0.3784;
+  const privatNetto = kontanterAS - privTax;
+
+  const totalKostnad = panTaxAS + temaTaxAS + privTax;
+  const totalVerdi = panMV + temaMV + bankAS;
+  const effRate = totalKostnad / totalVerdi;
+
+  const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  set('liq-pan-mv',    fmtKr(panMV));
+  set('liq-pan-cost',  fmtKr(panCost));
+  set('liq-pan-gain',  (panGain>=0?'+':'')+fmtKr(panGain));
+  set('liq-pan-tax',   '−'+fmtKr(panTaxAS));
+  set('liq-tema-mv',   fmtKr(temaMV));
+  set('liq-tema-gain', '+'+fmtKr(temaGain));
+  set('liq-tema-tax',  '−'+fmtKr(temaTaxAS));
+  set('liq-as-after',  fmtKr(kontanterAS));
+  set('liq-as-kontanter', fmtKr(kontanterAS));
+  set('liq-inngang',   '−'+fmtKr(inngangPrivat));
+  set('liq-skjerm',    '−'+fmtKr(skjermFradrag));
+  set('liq-skattepliktig', fmtKr(skattepliktig));
+  set('liq-priv-tax',  '−'+fmtKr(privTax));
+  set('liq-privat-netto', fmtKr(privatNetto));
+  set('liq-eff-rate',  fmtPct(effRate)+' av total porteføljeverdi');
+
+  // ── Regnskap tabeller ────────────────────────────────
   const years = Object.keys(ACCOUNTING_DATA).map(Number).sort((a,b)=>a-b); // asc for table
 
   // ── Build result table ──────────────────────────────
