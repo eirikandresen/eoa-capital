@@ -1403,8 +1403,6 @@ function attachTooltip(svgId, tooltipId, crosshairId, H, PB, W, contentFn){
   const data = svgId.includes('top') ? chartDataTop : chartDataBottom;
   if(!data.length) return;
 
-  const chartH = H - PB;
-
   svgEl.addEventListener('mousemove', e => {
     const rect = svgEl.getBoundingClientRect();
     const scaleX = W / rect.width;
@@ -1427,7 +1425,7 @@ function attachTooltip(svgId, tooltipId, crosshairId, H, PB, W, contentFn){
 
     // Don't show if too far from nearest point (empty area)
     const pixelDist = minDist / scaleX;
-    if(pixelDist > 30){
+    if(pixelDist > 8){
       tooltip.style.display = 'none';
       if(crosshair) crosshair.style.display = 'none';
       return;
@@ -1440,7 +1438,7 @@ function attachTooltip(svgId, tooltipId, crosshairId, H, PB, W, contentFn){
     tooltip.innerHTML = contentFn(closest);
     tooltip.style.display = 'block';
     tooltip.style.left = Math.max(80, Math.min(rect.width - 80, pxX)) + 'px';
-    tooltip.style.top = Math.max(60, pxFromTop - 10) + 'px';
+    tooltip.style.top = '10px';
 
     // Crosshair
     if(crosshair){
@@ -1520,7 +1518,7 @@ function drawMainChart(period,el){
 
   // ── TOP CHART: PAN A + OSEFX indexed ─────────────────
   {
-    const W=820,H=180,PT=10,PB=28,ch=H-PT-PB;
+    const H=160,PT=8,PB=24,ch=H-PT-PB;
     const n0=filteredSeries[0].n;
     const o0=filteredSeries[0].o;
     const navIdx=filteredSeries.map(r=>({d:r.d,v:(r.n/n0-1)*100}));
@@ -1535,11 +1533,12 @@ function drawMainChart(period,el){
     const osPath=mkP(osIdx);
     const navArea=navPath+` L${sx(navIdx[navIdx.length-1].d).toFixed(1)},${zero.toFixed(1)} L${sx(navIdx[0].d).toFixed(1)},${zero.toFixed(1)} Z`;
     const grid=[0.25,0.5,0.75].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="${W}" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
-    // y labels
     const ySteps=[0,25,50,75,100].filter(v=>v>=minV&&v<=maxV);
-    const yLabels=ySteps.map(v=>`<text x="4" y="${sy(v).toFixed(1)}" font-size="9" fill="#8a9690" font-family="Outfit,sans-serif" dominant-baseline="middle">${v>0?'+':''}${v}%</text>`).join('');
+    const yLabels=ySteps.map(v=>`<text x="4" y="${sy(v).toFixed(1)}" font-size="8" fill="#556058" font-family="Outfit,sans-serif" dominant-baseline="middle">${v>0?'+':''}${v}%</text>`).join('');
 
-    document.getElementById('main-chart-top').innerHTML=`
+    const svgEl = document.getElementById('main-chart-top');
+    svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svgEl.innerHTML=`
       <defs><linearGradient id="topGrad" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#4a8fc4" stop-opacity="0.15"/>
         <stop offset="100%" stop-color="#4a8fc4" stop-opacity="0.01"/>
@@ -1555,11 +1554,9 @@ function drawMainChart(period,el){
       ${mkXLabels(H,PB)}
     `;
 
-    // Store data for tooltip
     chartDataTop = navIdx.map((p,i) => ({
-      d: p.d,
-      pan: p.v,
-      os: osIdx[i] ? osIdx[i].v : null,
+      d: p.d, pan: p.v,
+      os: osIdx.find(o=>o.d===p.d)?.v ?? null,
       x: sx(p.d)
     }));
     attachTooltip('main-chart-top', 'tooltip-top', 'crosshair-top', H, PB, W,
@@ -1575,7 +1572,7 @@ function drawMainChart(period,el){
 
   // ── BOTTOM CHART: Portfolio MV in kr ─────────────────
   {
-    const W=820,H=160,PT=10,PB=28,ch=H-PT-PB;
+    const H=160,PT=8,PB=24,ch=H-PT-PB;
     const mvData=filteredSeries.map(r=>({d:r.d,v:getPortfolioMV(r.d)})).filter(r=>r.v!==null&&r.v>0);
     const invData=filteredSeries.map(r=>({d:r.d,v:getInvestedAt(r.d)})).filter(r=>r.v>0);
     if(!mvData.length) return;
@@ -1588,12 +1585,13 @@ function drawMainChart(period,el){
     const invPath=mkP(invData);
     const areaPath=mvPath+` L${sx(mvData[mvData.length-1].d).toFixed(1)},${(H-PB).toFixed(1)} L${sx(mvData[0].d).toFixed(1)},${(H-PB).toFixed(1)} Z`;
     const grid=[0.25,0.5,0.75,1].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="${W}" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
-    // y labels in M kr
     const yVals=[minKr+(maxKr-minKr)*0.25, minKr+(maxKr-minKr)*0.5, minKr+(maxKr-minKr)*0.75, maxKr];
-    const yLabels=yVals.map(v=>`<text x="4" y="${sy(v).toFixed(1)}" font-size="9" fill="#8a9690" font-family="Outfit,sans-serif" dominant-baseline="middle">${(v/1000000).toFixed(1)}M</text>`).join('');
+    const yLabels=yVals.map(v=>`<text x="4" y="${sy(v).toFixed(1)}" font-size="8" fill="#556058" font-family="Outfit,sans-serif" dominant-baseline="middle">${(v/1000000).toFixed(1)}M</text>`).join('');
     const last=mvData[mvData.length-1];
 
-    document.getElementById('main-chart-bottom').innerHTML=`
+    const svgEl2 = document.getElementById('main-chart-bottom');
+    svgEl2.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svgEl2.innerHTML=`
       <defs><linearGradient id="mvGrad2" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#4caf7d" stop-opacity="0.2"/>
         <stop offset="100%" stop-color="#4caf7d" stop-opacity="0.01"/>
@@ -1609,7 +1607,6 @@ function drawMainChart(period,el){
       ${mkXLabels(H,PB)}
     `;
 
-    // Store data for tooltip
     chartDataBottom = mvData.map(p => {
       const inv = getInvestedAt(p.d);
       return { d: p.d, mv: p.v, inv, x: sx(p.d) };
