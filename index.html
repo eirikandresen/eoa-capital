@@ -207,8 +207,8 @@ svg.chart{width:100%;display:block;overflow:visible;}
           <div class="sec-title">Porteføljeoversikt</div>
           <div class="sec-sub">EOA Capital AS · NAV per <span id="upd-date">—</span></div>
         </div>
-        <button class="toggle-tema-btn" id="toggle-tema-btn" onclick="toggleTema()">
-          <span id="toggle-tema-icon">👁</span> Skjul andre posisjoner
+        <button class="toggle-tema-btn active" id="toggle-tema-btn" onclick="toggleTema()">
+          <span id="toggle-tema-icon">🙈</span> Vis andre posisjoner
         </button>
       </div>
       <div class="kpi-grid">
@@ -663,7 +663,7 @@ let currentChartPeriod = 'all';
 // ═══════════════════════════════════════
 // TOGGLE TEMA
 // ═══════════════════════════════════════
-let temaVisible = true;
+let temaVisible = false;
 function toggleTema(){
   temaVisible = !temaVisible;
   const btn = document.getElementById('toggle-tema-btn');
