@@ -92,7 +92,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .ptab.active{background:var(--bg2);color:var(--green);font-weight:500;}
 
 /* CHART */
-svg.chart{width:100%;display:block;overflow:visible;}
+svg.chart{width:100%;display:block;overflow:hidden;}
 .chart-legend{display:flex;gap:20px;margin-top:14px;flex-wrap:wrap;}
 .leg-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);}
 .leg-line{width:20px;height:2px;border-radius:1px;}
@@ -1531,7 +1531,7 @@ function drawMainChart(period,el){
     const grid=[0.25,0.5,0.75].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="820" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
     // y labels
     const ySteps=[0,25,50,75,100].filter(v=>v>=minV&&v<=maxV);
-    const yLabels=ySteps.map(v=>`<text x="0" y="${sy(v).toFixed(1)}" font-size="9" fill="#556058" font-family="Outfit,sans-serif" dominant-baseline="middle">${v>0?'+':''}${v}%</text>`).join('');
+    const yLabels=ySteps.map(v=>`<text x="4" y="${sy(v).toFixed(1)}" font-size="9" fill="#8a9690" font-family="Outfit,sans-serif" dominant-baseline="middle">${v>0?'+':''}${v}%</text>`).join('');
 
     document.getElementById('main-chart-top').innerHTML=`
       <defs><linearGradient id="topGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1584,7 +1584,7 @@ function drawMainChart(period,el){
     const grid=[0.25,0.5,0.75,1].map(f=>`<line x1="0" y1="${(PT+ch*(1-f)).toFixed(1)}" x2="820" y2="${(PT+ch*(1-f)).toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`).join('');
     // y labels in M kr
     const yVals=[minKr+(maxKr-minKr)*0.25, minKr+(maxKr-minKr)*0.5, minKr+(maxKr-minKr)*0.75, maxKr];
-    const yLabels=yVals.map(v=>`<text x="0" y="${sy(v).toFixed(1)}" font-size="9" fill="#556058" font-family="Outfit,sans-serif" dominant-baseline="middle">${(v/1000000).toFixed(1)}M</text>`).join('');
+    const yLabels=yVals.map(v=>`<text x="4" y="${sy(v).toFixed(1)}" font-size="9" fill="#8a9690" font-family="Outfit,sans-serif" dominant-baseline="middle">${(v/1000000).toFixed(1)}M</text>`).join('');
     const last=mvData[mvData.length-1];
 
     document.getElementById('main-chart-bottom').innerHTML=`
